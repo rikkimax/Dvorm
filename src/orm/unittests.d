@@ -3,7 +3,10 @@ import dvorm;
 
 version(unittest) {
 	void unittest1(DbConnection[] cons...) {
+		assert(cons.length >= 1);
 		Book = cons;
+
+		assert(getDbType!Book() == cons[0].type);
 
 		Book book = new Book;
 		book.isbn = "978-0-300-14424-6";
@@ -44,16 +47,26 @@ version(unittest) {
 		assert(Book.findAll().length == 0);
 	}
 
-	@tableName("Books")
+	unittest {
+		assert(getTableName!Book() == "Books");
+		assert(getNameValue!(Book, "isbn") == "_id");
+		assert(getDefaultValue!(Book, "edition") == "0");
+		assert(shouldBeIgnored!(Book, "something"));
+	}
+
+	@dbname("Books")
 	class Book {
 		@id
-		@name("_id")
+		@dbname("_id")
 		string isbn;
 		
 		@defaultValue("0")
 		ubyte edition;
 		
 		void t() {}
+
+		@ignore
+		string something;
 		
 		mixin OrmModel!Book;
 	}
