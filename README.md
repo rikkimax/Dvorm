@@ -3,12 +3,6 @@ Dvorm
 
 A very simple orm designed to work Vibe.
 
-Features
---------
-- Simple interface
-- Same exact interface between database's
-
-
 **Database providers supported:**
 
 Default:
@@ -42,6 +36,9 @@ Default values can be given for a property to allow find* methods not require al
 		mixin OrmModel!Book;
 	}
 ```
+
+You can utilise objects as properties. But note that you cannot have an object have an object as an id as well it being an id. However a work around is making for each class an id class.
+Name mangling will occur in the form prop_(prop.prop'sprop). In other words page_chapter.
 
 To be able to operate any operation upon a model you require a database to operate with. To do so you utilise the database providers. You can set a database connection information at a global level or upon a model.
 
