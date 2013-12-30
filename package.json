@@ -3,6 +3,7 @@
 	"description": "A minimal D ORM.",
 	"copyright": "Copyright © 2013, Richard Andrew Cattermole",
 	"authors": ["Richard Andrew Cattermole"],
+	"license" : "MIT",
 	"dependencies": {
 		"dvorm:orm": "~master",
 		"dvorm:vibeproviders": "~master"
