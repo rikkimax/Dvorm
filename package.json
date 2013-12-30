@@ -1,0 +1,35 @@
+{
+	"name": "dvorm",
+	"description": "A minimal D ORM.",
+	"copyright": "Copyright © 2013, Richard Andrew Cattermole",
+	"authors": ["Richard Andrew Cattermole"],
+	"dependencies": {
+		"dvorm:orm": "~master",
+		"dvorm:vibeproviders": "~master"
+	},
+	"subPackages": [
+		{
+			"name": "orm",
+			"targetType": "library",
+			"sourcePaths": ["src/orm"]
+		},
+		{	
+			"name": "vibeproviders",
+			"targetType": "library",
+			"sourcePaths": ["src/vibe"],
+			"dependencies": {
+				"dvorm:orm": "~master",
+				"vibe-d": "~master"
+			},
+			"versions": ["VibeCustomMain"]
+		},
+		{
+			"name": "test",
+			"dependencies": {
+				"dvorm:orm": "~master",
+				"dvorm:vibeproviders": "~master"
+			},
+			"sourceFiles": ["src/main.d"]
+		}
+	]
+}
