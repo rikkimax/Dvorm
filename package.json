@@ -1,6 +1,6 @@
 {
 	"name": "dvorm",
-	"description": "A minimal D ORM.",
+	"description": "An orm for D with Vibe support.",
 	"copyright": "Copyright © 2013, Richard Andrew Cattermole",
 	"authors": ["Richard Andrew Cattermole"],
 	"license" : "MIT",
