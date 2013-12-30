@@ -2,9 +2,7 @@ module dvorm.query;
 import dvorm;
 import std.traits;
 
-interface IQuery {}
-
-class Query(string moduleName, string name) : IQuery {
+class Query(string moduleName, string name) {
 	mixin("import " ~ moduleName ~ ";");
 
 	private string[] store;
