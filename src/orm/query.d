@@ -4,17 +4,17 @@ import std.traits;
 
 class Query(string moduleName, string name) {
 	mixin("import " ~ moduleName ~ ";");
-
+	
 	private string[] store;
 	
 	mixin(queryInterface!(mixin(name))());
-
+	
 	mixin(name ~ "[] " ~ q{find() {
-		mixin(objectBuilderCreator!(mixin(name))());
-		mixin(name ~ "[] ret = cast(" ~ name ~ "[])" ~ q{provider(getDbType!(mixin(name))).handleQuery(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, mixin(name).databaseConnection());});
-		return ret;
-	}});
-
+			mixin(objectBuilderCreator!(mixin(name))());
+			mixin(name ~ "[] ret = cast(" ~ name ~ "[])" ~ q{provider(getDbType!(mixin(name))).handleQuery(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, mixin(name).databaseConnection());});
+			return ret;
+		}});
+	
 	mixin("""
 Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") maxAmount(ushort value) {
 	mixin(objectBuilderCreator!(mixin(name))());
@@ -32,18 +32,34 @@ Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") st
 
 pure string queryInterface(C)() {
 	string ret;
-
+	
 	C c = new C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m) && !shouldBeIgnored!(C, m)) {
-			ret ~= queryIGen!(C, m, "eq")();
-			ret ~= queryIGen!(C, m, "neq")();
-			ret ~= queryIGen!(C, m, "lt")();
-			ret ~= queryIGen!(C, m, "lte")();
-			ret ~= queryIGen!(C, m, "mt")();
-			ret ~= queryIGen!(C, m, "mte")();
-			ret ~= queryIGen!(C, m, "like")();
+			static if (!is(typeof(mixin("c." ~ m)) : Object) && !is(typeof(mixin("c." ~ m)) == enum)) {
+				ret ~= queryIGen!(C, m, "eq")();
+				ret ~= queryIGen!(C, m, "neq")();
+				ret ~= queryIGen!(C, m, "lt")();
+				ret ~= queryIGen!(C, m, "lte")();
+				ret ~= queryIGen!(C, m, "mt")();
+				ret ~= queryIGen!(C, m, "mte")();
+				ret ~= queryIGen!(C, m, "like")();
+			} else static if (!is(typeof(mixin("c." ~ m)) == enum)) {
+				foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
+					static if (isUsable!(typeof(mixin("c." ~ m)), n) && !shouldBeIgnored!(typeof(mixin("c." ~ m)), n)) {
+						static if (!is(typeof(mixin("c." ~ m ~ "." ~ n)) : Object)) {
+							ret ~= queryIGen!(C, m, "eq", n)();
+							ret ~= queryIGen!(C, m, "neq", n)();
+							ret ~= queryIGen!(C, m, "lt", n)();
+							ret ~= queryIGen!(C, m, "lte", n)();
+							ret ~= queryIGen!(C, m, "mt", n)();
+							ret ~= queryIGen!(C, m, "mte", n)();
+							ret ~= queryIGen!(C, m, "like", n)();
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -53,11 +69,11 @@ pure string queryInterface(C)() {
 pure string queryGenerator(C)() {
 	string ret;
 	C c = new C;
-
+	
 	ret ~= "@property static Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\") query() {";
 	ret ~= "return new Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\");";
 	ret ~= "}";
-
+	
 	return ret;
 }
 
@@ -69,19 +85,40 @@ pure bool hasType(C, string name, string type)() {
 			}
 		}
 	}
-
+	
 	return false;
 }
 
-pure string queryIGen(C, string m, string op)() {
-	C c = new C;
-	string typeValue = typeof(mixin("c." ~ m)).stringof == "string" ? "value" : "to!string(value)";
+pure string queryIGen(C, string m, string op, string subm="",
+                      C c = new C,
+                      string nameOfFunc = m ~ (subm == "" ? "" : "_" ~ subm) ~ "_" ~ op,
+                      string handleName = getNameOfHandle!(C, m, subm)(),
+                      string typeValue = typeof(mixin("c." ~ m)).stringof == "string" ? "value" : "to!string(value)",
+                      string valueType = getValueOfHandle!(C, m, subm)())() {
 	return 
-"""
-Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\")" ~ m ~ "_" ~ op ~ "(" ~ typeof("c." ~ m).stringof ~ " value) {
+		"""
+Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\")" ~ nameOfFunc ~ "(" ~ valueType ~ " value) {
     import std.conv;
-    store = provider(getDbType!" ~ C.stringof ~ ").handleQueryOp(\"" ~ op ~ "\", \"" ~ getNameValue!(C, m)() ~ "\", " ~ typeValue ~ ", store); 
+    store = provider(getDbType!" ~ C.stringof ~ ").handleQueryOp(\"" ~ op ~ "\", \"" ~ handleName ~ "\", " ~ typeValue ~ ", store); 
     return this;
 }
 """;
+}
+
+pure string getNameOfHandle(C, string m, string subm,
+                            C c = new C)() {
+	static if (subm == "") {
+		return getNameValue!(C, m)();
+	} else {
+		return getNameValue!(C, m)() ~ "_" ~ getNameValue!(typeof(mixin("c." ~ m)), subm)();
+	}
+}
+
+pure string getValueOfHandle(C, string m, string subm,
+                             C c = new C)() {
+	static if (subm == "") {
+		return typeof("c." ~ m).stringof;
+	} else {
+		return typeof(mixin("c." ~ m ~ "." ~ subm)).stringof;
+	}
 }
