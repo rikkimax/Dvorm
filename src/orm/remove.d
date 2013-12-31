@@ -41,10 +41,10 @@ string remove(C)() {
 										assert(0, "Cannot use an object as an id, when more then one recursion. " ~ C.stringof ~ "." ~ m ~ "." ~ n);
 									} else static if (typeof(mixin("d." ~ n)).stringof != "string") {
 										idNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
-										valueArray ~= "to!string(d. " ~ n ~ "),";
+										valueArray ~= "\"" ~ to!string(mixin("d." ~ n)) ~ "\",";
 									} else {
 										idNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
-										valueArray ~= "d. " ~ n ~ ",";
+										valueArray ~= "\"" ~ mixin("d." ~ n) ~ "\",";
 									}
 								}
 							}
