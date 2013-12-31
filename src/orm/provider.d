@@ -55,7 +55,7 @@ pure string objectBuilderCreator(C, string name = "objectBuilder")() {
 	ret ~= "    import " ~ moduleName!C ~ ";\n";
 	ret ~= "    import std.conv : to;\n";
 	ret ~= "    " ~ C.stringof ~ " ret = new " ~ C.stringof ~ ";\n";
-	ret ~= "    Object v;\n";
+	ret ~= "    string keyValueOfName;";
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)) {
@@ -72,24 +72,29 @@ pure string objectBuilderCreator(C, string name = "objectBuilder")() {
             ret." ~ m ~ " = values[\"" ~ getNameValue!(C, m)() ~ "\"];
         }
     } else {
-        v = new typeof(ret." ~ m  ~ ");
+        auto " ~ m ~ " = new typeof(ret." ~ m  ~ ");
         foreach(n; __traits(allMembers, typeof(ret." ~ m ~ "))) {
-            static if (isUsable!(typeof(v), n)() && !shouldBeIgnored!(typeof(v), n)()) {
-                static if (!is(typeof(mixin(\"v.\" ~ n)) : Object)) {
-                    static if (isBasicType!(typeof(mixin(\"v.\" ~ n)))) {
-                        mixin(\"v.\" ~ n) = to!(typeof(mixin(\"v.\" ~ n)))(values[\"" ~ getNameValue!(C, m)() ~ "_\" ~ getNameValue!(typeof(v), n)()]);
-                    } else static if (isArray!(typeof(mixin(\"v.\" ~ n))) && 
-			            (typeof(mixin(\"v.\" ~ n)).stringof == \"string\" ||
-			 			typeof(mixin(\"v.\" ~ n)).stringof == \"dstring\" ||
-			 			typeof(mixin(\"v.\" ~ n)).stringof == \"wstring\")) {
-                        mixin(\"v.\" ~ n) = values[\"" ~ getNameValue!(C, m)() ~ "_\" ~ getNameValue!(typeof(v), n)()];
+            static if (isUsable!(typeof(ret." ~ m  ~ "), n)() && !shouldBeIgnored!(typeof(ret." ~ m  ~ "), n)()) {
+                static if (!is(typeof(mixin(\"" ~ m ~ ".\" ~ n)) : Object)) {
+                    keyValueOfName = \"" ~ getNameValue!(C, m)() ~ "_\" ~ getNameValue!(typeof(ret." ~ m  ~ "), n)();
+                    static if (isBasicType!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))) {
+                       if (keyValueOfName in values) {
+                           mixin(\"" ~ m ~ ".\" ~ n) = to!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))(values[keyValueOfName]);
+                       }
+                    } else static if (isArray!(typeof(mixin(\"" ~ m ~ ".\" ~ n))) && 
+			            (typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"string\" ||
+			 			typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"dstring\" ||
+			 			typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"wstring\")) {
+                       if (keyValueOfName in values) {
+                           mixin(\"" ~ m ~ ".\" ~ n) = to!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))(values[keyValueOfName]);
+                       }
                     }
                 } else {
                     assert(0, \"Cannot have ids within more then one recursion of an object\");
                 }
             }
         }
-        ret." ~ m ~ " = cast(typeof(ret." ~ m ~ "))v;
+        ret." ~ m ~ " = " ~ m ~ ";
     }
 """;
 			}
