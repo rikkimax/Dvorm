@@ -106,6 +106,7 @@ class MongoProvider : Provider {
 
 		size_t i;
 		foreach(id; idNames) {
+			i = 0;
 			foreach(vn; valueNames) {
 				if (vn == id) {
 					query[id] = Bson(valueArray[i]);

@@ -28,21 +28,23 @@ string save(C)() {
 			}
 			
 			static if (is(typeof(mixin("c." ~ m)) : Object)) {
-				//assert(0, "Have yet to enable saving of objects");
-				mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
-				mixin(typeof(mixin("c." ~ m)).stringof ~ " d = new " ~ typeof(mixin("c." ~ m)).stringof ~ ";");
-				foreach(n; __traits(allMembers, mixin("typeof(d)"))) {
-					static if (isUsable!(typeof(d), n)()) {
-						foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
-							static if (is(UDA : id)) {
-								idNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
-								valueNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
-								static if (is(typeof(mixin("d." ~ n)) : Object)) {
-									assert(0, "Cannot use an object as an id, when more then one recursion. " ~ C.stringof ~ "." ~ m ~ "." ~ n);
-								} else static if (typeof(mixin("d." ~ n)).stringof != "string") {
-									valueArray ~= "\"" ~ to!string(mixin("d." ~ n)) ~ "\",";
-								} else {
-									valueArray ~= "\"" ~ mixin("d." ~ n) ~ "\",";
+				static if (isAnId!(C, m)) {
+					//assert(0, "Have yet to enable saving of objects");
+					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
+					mixin("auto d = new typeof(c." ~ m ~ ");");
+					foreach(n; __traits(allMembers, mixin("typeof(d)"))) {
+						static if (isUsable!(typeof(d), n)() && !shouldBeIgnored!(typeof(d), n)()) {
+							foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
+								static if (is(UDA : id)) {
+									idNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
+									valueNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
+									static if (is(typeof(mixin("d." ~ n)) : Object)) {
+										assert(0, "Cannot use an object as an id, when more then one recursion. " ~ C.stringof ~ "." ~ m ~ "." ~ n);
+									} else static if (typeof(mixin("d." ~ n)).stringof != "string") {
+										valueArray ~= "to!string(" ~ m ~ "." ~ n ~ "),";
+									} else {
+										valueArray ~= m ~ "." ~ n ~ ",";
+									}
 								}
 							}
 						}
