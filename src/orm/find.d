@@ -19,16 +19,17 @@ string find(C)() {
 	bool hasIndex;
 	
 	foreach(m; __traits(allMembers, C)) {
-		bool hasId = false;
+		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
 
-		foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-			static if (is(UDA : id)) {
-				hasId = true;
+			bool hasId = false;
+
+			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
+				static if (is(UDA : id)) {
+					hasId = true;
+				}
 			}
-		}
 
-		if (hasId) {
-			static if (isUsable!(C, m)()) {
+			if (hasId) {
 				static if (is(typeof(mixin("c." ~ m)) : Object)) {
 					// so we are an object.
 					//assert(0, "Cannot use an object as an id");

@@ -19,13 +19,13 @@ string save(C)() {
 	C c = new C;
 	
 	foreach(m; __traits(allMembers, C)) {
-		foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-			static if (is(UDA : id)) {
-				idNames ~= "\"" ~ getNameValue!(C, m)() ~ "\",";
-			}
-		}
-
 		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
+			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
+				static if (is(UDA : id)) {
+					idNames ~= "\"" ~ getNameValue!(C, m)() ~ "\",";
+				}
+			}
+
 			static if (is(typeof(mixin("c." ~ m)) : Object)) {
 				//assert(0, "Have yet to enable saving of objects");
 				mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");

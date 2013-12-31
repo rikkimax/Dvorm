@@ -19,15 +19,15 @@ string remove(C)() {
 	C c = new C;
 	
 	foreach(m; __traits(allMembers, C)) {
-		bool hasId = false;
-		foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-			static if (is(UDA : id)) {
-				hasId = true;
+		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
+			bool hasId = false;
+			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
+				static if (is(UDA : id)) {
+					hasId = true;
+				}
 			}
-		}
 
-		if (hasId) {
-			static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
+			if (hasId) {
 				static if (is(typeof(mixin("c." ~ m)) : Object)) {
 					//assert(0, "Have yet to enable saving of objects");
 					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
