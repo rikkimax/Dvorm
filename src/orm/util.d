@@ -186,10 +186,13 @@ pure bool isUsable(C, string m)() {
 			}
 			
 			static if (isBasicType!(typeof(mixin("c." ~ m))) ||
-			       		is(typeof(mixin("c." ~ m)) : Object)) {
+			           is(typeof(mixin("c." ~ m)) : Object) ||
+			           is(typeof(mixin("c." ~ m)) == enum)) {
 				// allow primitives and classes
 				return true;
 			}
+			
+			assert(0, "Type information for " ~ C.stringof ~ "." ~ m ~ " has not been implemented yet.");
 	    } else {
 			return false;
 		}
