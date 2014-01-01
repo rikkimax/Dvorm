@@ -39,6 +39,8 @@ Default values can be given for a property to allow find* methods not require al
 You can utilise objects as properties. But note that you cannot have an object have an object as an id as well it being an id. However a work around is making for each class an id class.
 Name mangling will occur in the form prop_(prop.prop'sprop). In other words page_chapter.
 
+For properties that are objects have a default value. Currently it does not build one if required.
+
 To be able to operate any operation upon a model you require a database to operate with. To do so you utilise the database providers. You can set a database connection information at a global level or upon a model.
 
 **Global**
