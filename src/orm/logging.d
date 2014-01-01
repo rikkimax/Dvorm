@@ -50,8 +50,9 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 		}
 	}
 
+	
 	foreach(m; __traits(allMembers, C)) {
-		static if (isUsable!(C, m)()) {
+		static if (isUsable!(C, m)() && !is(typeof(mixin("c." ~ m)) : Object)) {
 			if (m !in ids) {
 				static if(!keysOnly) {
 					ret ~= "ormLogVal ~= \"[";
