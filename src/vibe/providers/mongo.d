@@ -86,8 +86,8 @@ class MongoProvider : Provider {
 		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
 		Bson[string] query;
 		
-		size_t i;
 		foreach(id; idNames) {
+			size_t i;
 			foreach(vn; valueNames) {
 				if (vn == id) {
 					query[id] = Bson(valueArray[i]);
