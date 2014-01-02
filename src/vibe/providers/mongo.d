@@ -72,7 +72,11 @@ class MongoProvider : Provider {
 
 		Bson qBson = Bson(query);
 		string[string] create;
-		foreach(string k, b; col.findOne(qBson)) {
+		
+		Bson ret = col.findOne(qBson);
+		if (ret.isNull) return null;
+		
+		foreach(string k, b; ret) {
 			try {
 				create[k] = b.get!string();
 			} catch (Exception e) {}
