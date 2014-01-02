@@ -173,7 +173,8 @@ pure bool isUsable(C, string m)() {
 		           !__traits(isStaticFunction, mixin("c." ~ m)) &&
 		           !__traits(isOverrideFunction, mixin("c." ~ m)) &&
 		           !__traits(isFinalFunction, mixin("c." ~ m)) &&
-		           m != "opCast" &&
+		           !(m.length >= 2 &&
+		  m[0 .. 2] == "op") &&
 		           !__traits(isVirtualMethod, mixin("c." ~ m))) {
 			// first stage done.
 		
