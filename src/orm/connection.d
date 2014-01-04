@@ -9,7 +9,7 @@ string connection() {
 	ret ~=
 """
 static {
-    @ignore
+    @dbIgnore
 	private DbConnection[] databaseConnection_;
 
 	@property {
@@ -21,7 +21,7 @@ static {
 	        databaseConnection_ = connection;
 	    }
 
-        @ignore
+        @dbIgnore
 	    DbConnection[] databaseConnection() {
 	        return databaseConnection_;
 	    }
@@ -35,7 +35,7 @@ static {
         databaseConnection(connection);
     }
 
-    @ignore
+    @dbIgnore
     DbConnection[] opCast(T : DbConnection[])() {
         return databaseConnection();
     }

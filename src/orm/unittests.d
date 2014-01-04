@@ -65,7 +65,7 @@ version(unittest) {
 		
 		void t() {}
 
-		@ignore
+		@dbIgnore
 		string something;
 		
 		mixin OrmModel!Book;

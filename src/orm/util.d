@@ -3,22 +3,17 @@ import dvorm.connection;
 import std.conv : to;
 import std.traits;
 
-struct id {
+struct dbId {
 }
 
-struct defaultValue {
+struct dbDefaultValue {
 	string value;
 }
 
-static if (__traits(compiles, { import vibe.data.serialization; })) {
-	public import vibe.data.serialization : IgnoreAttribute;
-	alias IgnoreAttribute ignore;
-} else {
-	struct ignore {
-	}
+struct dbIgnore {
 }
 
-struct dbname {
+struct dbName {
 	string value;
 }
 
@@ -66,11 +61,11 @@ pure string getTableName(C)() {
 
 pure bool shouldBeIgnored(C, string m)() {
 	C c = new C;
-
+	
 	static if (__traits(compiles, __traits(getProtection, mixin("c." ~ m))) &&
 	           __traits(getProtection, mixin("c." ~ m)) == "public") {
 		foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-			static if (is(UDA : ignore)) {
+			static if (is(UDA : dbIgnore)) {
 				return true;
 			}
 		}
@@ -84,7 +79,7 @@ pure bool isAnId(C, string m)() {
 	C c = new C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-		static if (is(UDA : id)) {
+		static if (is(UDA : dbId)) {
 			return true;
 		}
 	}
