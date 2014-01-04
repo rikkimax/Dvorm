@@ -27,7 +27,7 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 	
 	foreach(m; __traits(allMembers, C)) {
 		foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-			static if (is(UDA : id)) {
+			static if (is(UDA : dbId)) {
 				ids[m] = [];
 			}
 		}

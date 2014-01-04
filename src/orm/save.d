@@ -21,7 +21,7 @@ string save(C)() {
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
 			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-				static if (is(UDA : id)) {
+				static if (is(UDA : dbId)) {
 					static if (!is(typeof(mixin("c." ~ m)) : Object))
 						idNames ~= "\"" ~ getNameValue!(C, m)() ~ "\",";
 				}
@@ -34,7 +34,7 @@ string save(C)() {
 				foreach(n; __traits(allMembers, mixin("typeof(d)"))) {
 					static if (isUsable!(typeof(d), n)() && !shouldBeIgnored!(typeof(d), n)()) {
 						foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
-							static if (is(UDA : id)) {
+							static if (is(UDA : dbId)) {
 								idNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
 								valueNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
 								static if (is(typeof(mixin("d." ~ n)) : Object)) {

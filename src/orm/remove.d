@@ -22,7 +22,7 @@ string remove(C)() {
 		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
 			bool hasId = false;
 			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-				static if (is(UDA : id)) {
+				static if (is(UDA : dbId)) {
 					hasId = true;
 				}
 			}
@@ -35,7 +35,7 @@ string remove(C)() {
 					foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
 						static if (isUsable!(typeof(d), n)()) {
 							foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
-								static if (is(UDA : id)) {
+								static if (is(UDA : dbId)) {
 									valueNames ~= "\"" ~ m  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
 									static if (is(typeof(mixin("d." ~ n)) : Object)) {
 										assert(0, "Cannot use an object as an id, when more then one recursion. " ~ C.stringof ~ "." ~ m ~ "." ~ n);

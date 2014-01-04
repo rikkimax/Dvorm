@@ -21,7 +21,7 @@ pure string getDefaultValue(C, string m)() {
 	C c = new C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-		static if (__traits(compiles, {defaultValue v = UDA;})) {
+		static if (__traits(compiles, {dbDefaultValue v = UDA;})) {
 			return UDA.value;
 		}
 	}
@@ -32,7 +32,7 @@ pure bool hasDefaultValue(C, string m)() {
 	C c = new C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-		static if (__traits(compiles, {defaultValue v = UDA;})) {
+		static if (__traits(compiles, {dbDefaultValue v = UDA;})) {
 			return true;
 		}
 	}
@@ -43,7 +43,7 @@ pure string getNameValue(C, string m)() {
 	C c = new C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-		static if (__traits(compiles, {dbname v = UDA;})) {
+		static if (__traits(compiles, {dbName v = UDA;})) {
 			return UDA.value;
 		}
 	}
@@ -52,7 +52,7 @@ pure string getNameValue(C, string m)() {
 
 pure string getTableName(C)() {
 	foreach(UDA; __traits(getAttributes, C)) {
-		static if (__traits(compiles, {dbname v = UDA;})) {
+		static if (__traits(compiles, {dbName v = UDA;})) {
 			return UDA.value;
 		}
 	}

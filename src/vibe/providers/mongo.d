@@ -207,6 +207,77 @@ class MongoProvider : Provider {
 		}
 		return ret;
 	}
+	
+	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection) {
+		checkConnection(table, connection);
+		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
+		Bson[string] query;
+		
+		int num_skip = 0, num_docs_per_chunk = 0;
+		
+		// build the query
+		foreach(s; store) {
+			size_t i = s.indexOf(":");
+			if (i >= 0 && i + 1 < s.length) {
+				string op = s[0 .. i];
+				string prop = s[i + 1.. $];
+				i = prop.indexOf(":");
+				if (i >= 0 && i + 1 < prop.length) {
+					string value = prop[i + 1.. $];
+					prop = prop[0 .. i];
+					
+					switch(op) {
+						case "lt":
+						case "lte":
+						case "mt":
+						case "mte":
+							query[prop] = Bson(["$" ~ op : Bson(value)]);
+							break;
+						case "eq":
+							query[prop] = Bson(value);
+							break;
+						case "neq":
+							query[prop] = Bson(["$ne" : Bson(value)]);
+							break;
+							
+						case "startAt":
+							num_skip = to!int(value);
+							break;
+						case "maxAmount":
+							num_docs_per_chunk = to!int(value);
+							break;
+							
+						case "like":
+							query[prop] = Bson(["$regex" : Bson(".*" ~ value ~ ".*"), "$options" : Bson("i")]);
+							break;
+							
+						default:
+							break;
+					}
+				}
+			}
+		}
+		
+		Bson qBson;
+		if (num_docs_per_chunk == 0)
+			qBson = Bson(["count" : Bson(table), "query" : Bson(query), "skip" : Bson(num_skip)]);
+		else
+			qBson = Bson(["count" : Bson(table), "query" : Bson(query), "skip" : Bson(num_skip), "limit" : Bson(num_docs_per_chunk)]);
+		
+		size_t ret;
+		try {
+			Bson[string] v = col.database.runCommand(qBson).get!(Bson[string])();
+			
+			if ("ok" in v) {
+				if (v["ok"].get!double() == 1) {
+					if ("n" in v) {
+						ret = cast(size_t)v["n"].get!double();
+					}
+				}
+			}
+		} catch (Exception e) {}
+		return ret;
+	}
 }
 
 private {

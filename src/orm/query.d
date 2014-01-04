@@ -15,6 +15,12 @@ class Query(string moduleName, string name) {
 			return ret;
 		}});
 	
+	mixin(q{
+		size_t count() {
+			return provider(getDbType!(mixin(name))).handleQueryCount(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), mixin(name).databaseConnection());
+		}
+	});
+	
 	mixin("""
 Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") maxAmount(ushort value) {
 	mixin(objectBuilderCreator!(mixin(name))());

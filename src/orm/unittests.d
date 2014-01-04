@@ -37,6 +37,7 @@ version(unittest) {
 		
 		assert(Book.query().isbn_neq(book.isbn).startAt(1).maxAmount(1).find().length == 0);
 		assert(Book.query().isbn_neq(book.isbn).maxAmount(1).find()[0].isbn == book2.isbn);
+		assert(Book.query().isbn_neq(book.isbn).count() == 1);
 
 		assert(Book.query().isbn_like(book.isbn[$-7 .. $]).find().length == 1);
 		assert(Book.query().isbn_like(book.isbn[$-7 .. $]).find()[0].isbn == book.isbn);
@@ -54,13 +55,13 @@ version(unittest) {
 		assert(shouldBeIgnored!(Book, "something"));
 	}
 
-	@dbname("Books")
+	@dbName("Books")
 	class Book {
-		@id
-		@dbname("_id")
+		@dbId
+		@dbName("_id")
 		string isbn;
 		
-		@defaultValue("0")
+		@dbDefaultValue("0")
 		ubyte edition;
 		
 		void t() {}

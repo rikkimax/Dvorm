@@ -23,11 +23,11 @@ string findOne(C)() {
 			bool hasId = false;
 			
 			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
-				static if (is(UDA : id)) {
+				static if (is(UDA : dbId)) {
 					hasId = true;
 				}
 			}
-		
+			
 			if (hasId) {
 				static if (is(typeof(mixin("c." ~ m)) : Object)) {
 					// so we are an object.
@@ -37,7 +37,7 @@ string findOne(C)() {
 					foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
 						static if (isUsable!(typeof(d), n)()) {
 							foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
-								static if (is(UDA : id)) {
+								static if (is(UDA : dbId)) {
 									argNames ~= "\"" ~ getNameValue!(C, m)() ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
 									
 									string argNum = to!string(indexCount);
