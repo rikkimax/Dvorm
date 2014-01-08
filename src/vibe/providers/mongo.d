@@ -278,6 +278,54 @@ class MongoProvider : Provider {
 		} catch (Exception e) {}
 		return ret;
 	}
+	
+	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection) {
+		checkConnection(table, connection);
+		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
+		Bson[string] query;
+		
+		//int num_skip = 0, num_docs_per_chunk = 0;
+		
+		// build the query
+		foreach(s; store) {
+			size_t i = s.indexOf(":");
+			if (i >= 0 && i + 1 < s.length) {
+				string op = s[0 .. i];
+				string prop = s[i + 1.. $];
+				i = prop.indexOf(":");
+				if (i >= 0 && i + 1 < prop.length) {
+					string value = prop[i + 1.. $];
+					prop = prop[0 .. i];
+					
+					switch(op) {
+						case "lt":
+						case "lte":
+						case "mt":
+						case "mte":
+							query[prop] = Bson(["$" ~ op : Bson(value)]);
+							break;
+						case "eq":
+							query[prop] = Bson(value);
+							break;
+						case "neq":
+							query[prop] = Bson(["$ne" : Bson(value)]);
+							break;
+							
+						case "like":
+							query[prop] = Bson(["$regex" : Bson(".*" ~ value ~ ".*"), "$options" : Bson("i")]);
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							break;
+					}
+				}
+			}
+		}
+		
+		col.remove(Bson(query));
+	}
 }
 
 private {

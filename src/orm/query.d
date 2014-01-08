@@ -21,6 +21,12 @@ class Query(string moduleName, string name) {
 		}
 	});
 	
+	mixin(q{
+		void remove() {
+			provider(getDbType!(mixin(name))).handleQueryRemove(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), mixin(name).databaseConnection());
+		}
+	});
+	
 	mixin("""
 Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") maxAmount(ushort value) {
 	mixin(objectBuilderCreator!(mixin(name))());

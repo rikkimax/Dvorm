@@ -338,6 +338,109 @@ class MemoryProvider : Provider {
 			return i;
 		}
 	}
+	
+	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection) {
+		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
+		if (datums.value == null) {
+			return;
+		} else {
+			string[string][] ret;
+			QOp[] ops;
+			
+			foreach(s; store) {
+				size_t i = s.indexOf(":");
+				if (i >= 0 && i + 1 < s.length) {
+					string op = s[0 .. i];
+					string prop = s[i + 1.. $];
+					i = prop.indexOf(":");
+					if (i >= 0 && i + 1 < prop.length) {
+						string value = prop[i + 1.. $];
+						prop = prop[0 .. i];
+						
+						ops ~= QOp(op, prop, value);
+					}
+				}
+			}
+			
+			size_t i;
+			
+			foreach(d; datums.value) {
+				bool stillOk = true;
+				
+				foreach(k, v; d) {
+					bool isFloat = false;
+					bool isLong = false;
+					
+					float f;
+					long l;
+					
+					try {
+						f = to!float(v);
+						isFloat = true;
+					} catch (Exception e) {}
+					try {
+						l = to!long(v);
+						isLong = true;
+					} catch (Exception e) {}
+					
+					foreach(op; ops) {
+						if (op.prop == k) {
+							switch(op.op) {
+								
+								case "eq":
+									mixin(getQueryOp!("==")());
+									break;
+								case "neq":
+									mixin(getQueryOp!("!=")());
+									break;
+									
+								case "lt":
+									mixin(getQueryOp!("<")());
+									break;
+								case "lte":
+									mixin(getQueryOp!("<=")());
+									break;
+									
+								case "mt":
+									mixin(getQueryOp!(">")());
+									break;
+								case "mte":
+									mixin(getQueryOp!(">=")());
+									break;
+									
+								case "like":
+									if (isFloat) {
+										try {
+											if (!(to!float(op.value) <> f)) stillOk = false;
+										} catch (Exception e) {stillOk = false;}
+									} else if (isLong) {
+										try {
+											if (!(to!long(op.value) <> l)) stillOk = false;
+										} catch (Exception e) {stillOk = false;}
+									} else {
+										ptrdiff_t loc = v.indexOf(op.value, CaseSensitive.no);
+										if (!(loc >= 0)) stillOk = false;
+									}
+									break;
+									
+								case "startAt":
+								case "maxAmount":
+								default:
+									stillOk = false;
+									break;
+							}
+						}
+					}
+				}
+				
+				if (stillOk) {
+					ret ~= d;
+					i++;
+				}
+			}
+			tableData[table].value = cast(shared)ret;
+		}
+	}
 }
 
 private {

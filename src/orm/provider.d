@@ -46,6 +46,7 @@ abstract class Provider {
 	string[] handleQueryOp(string op, string prop, string value, string[] store);
 	Object[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection);
 	size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection);
+	void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection);
 }
 
 alias Object delegate(string[string] values) ObjectBuilder;
