@@ -17,12 +17,12 @@ void ormLogAppend(string val) {
 pure string logger(C, bool keysOnly = false, bool appendOnly = false, string prefix="")() {
 	string ret;
 	if (!appendOnly) {
-		ret ~= "static this() {";
+		ret ~= "shared static this() {";
 		ret ~= "string ormLogVal = \"" ~ getTableName!(C)() ~ ":\r\n\";";
 	}
-
+	
 	C c = new C;
-
+	
 	void[][string] ids;
 	
 	foreach(m; __traits(allMembers, C)) {

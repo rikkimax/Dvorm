@@ -5,6 +5,6 @@ public import dvorm.vibe.providers.mongo;
 
 import std.traits;
 
-static this() {
+shared static this() {
 	registerProvider(DbType.Mongo, new MongoProvider);
 }

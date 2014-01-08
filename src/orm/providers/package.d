@@ -5,6 +5,6 @@ public import dvorm.providers.memory;
 
 import std.traits;
 
-static this() {
+shared static this() {
 	registerProvider(DbType.Memory, new MemoryProvider);
 }
