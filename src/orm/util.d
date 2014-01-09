@@ -17,6 +17,16 @@ struct dbName {
 	string value;
 }
 
+/**
+ * Right now I have NO idea how to determine if this is dbActualModel or not.
+ * So UDA it is
+ */
+@("dbIsModel")
+struct dbActualModel(T, string prop) {
+	T type;
+	string name = prop;
+}
+
 pure string getDefaultValue(C, string m)() {
 	C c = new C;
 	
@@ -202,4 +212,56 @@ DbType getDbType(C)() {
 		return c.type;
 	}
 	return DbType.Memory;
+}
+
+/**
+ * Does a variable have another model associated with it?
+ */
+
+pure bool isActualRelationship(T, string f)() {
+	T t = new T;
+	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
+		foreach(UDA2; __traits(getAttributes, UDA)) {
+			static if (UDA2 == "dbIsModel") {
+				return true;	
+			}
+		}
+	}
+	
+	return false;
+}
+
+/**
+ * Get us the type name/module name of another model's based upon the variable.
+ */
+
+pure string getRelationshipClassName(T, string f)() {
+	T t = new T;
+	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
+		return typeof(UDA.type).stringof;
+	}
+	
+	return null;
+}
+
+pure string getRelationshipClassModuleName(T, string f)() {
+	T t = new T;
+	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
+		return moduleName!(typeof(UDA.type));
+	}
+	
+	return null;
+}
+
+/**
+ * Get the name of property that the relationship's classes property is.
+ */
+
+pure string getRelationshipPropertyName(T, string f)() {
+	T t = new T;
+	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
+		return UDA.name;
+	}
+	
+	return null;
 }
