@@ -33,6 +33,10 @@ abstract class Provider {
 		remove(getTableName!C(), idNames, valueNames, valueArray, C.databaseConnection());
 	}
 	
+	void removeAll(C)() {
+		removeAll(getTableName!C(), C.databaseConnection());
+	}
+	
 	void save(C)(string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder) {
 		save(getTableName!C(), idNames, valueNames, valueArray, builder, C.databaseConnection());
 	}
@@ -41,6 +45,7 @@ abstract class Provider {
 	Object[] findAll(string table, ObjectBuilder builder, DbConnection[] connection);
 	Object findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
 	void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection);
+	void removeAll(string table, DbConnection[] connection);
 	void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection);
 	
 	string[] handleQueryOp(string op, string prop, string value, string[] store);

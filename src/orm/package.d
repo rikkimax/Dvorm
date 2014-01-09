@@ -5,6 +5,7 @@ public import dvorm.findAll;
 public import dvorm.util;
 public import dvorm.save;
 public import dvorm.remove;
+public import dvorm.removeall;
 public import dvorm.logging;
 public import dvorm.connection;
 public import dvorm.provider;
@@ -23,6 +24,7 @@ mixin template OrmModel(C) {
 	mixin(findAll!C());
 	mixin(save!C());
 	mixin(remove!C());
+	mixin(removeAll!C());
 	mixin(logger!C());
 	mixin(connection());
 	mixin(queryGenerator!C());

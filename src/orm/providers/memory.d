@@ -65,7 +65,13 @@ class MemoryProvider : Provider {
 				tableData.remove(table);
 		}
 	}
-
+	
+	override void removeAll(string table, DbConnection[] connection) {
+		if (tableData.get(table, TableData.init) !is cast(shared)TableData.init) {
+			tableData.remove(table);
+		}
+	}
+	
 	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
 		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;

@@ -102,7 +102,14 @@ class MongoProvider : Provider {
 		
 		col.remove(Bson(query));
 	}
-
+	
+	override void removeAll(string table, DbConnection[] connection) {
+		checkConnection(table, connection);
+		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
+		
+		col.remove();
+	}
+	
 	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
 		checkConnection(table, connection);
 		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
