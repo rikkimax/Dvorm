@@ -2,6 +2,7 @@ module dvorm.util;
 import dvorm.connection;
 import std.conv : to;
 import std.traits;
+import std.string : toUpper;
 
 struct dbId {
 }
@@ -238,7 +239,9 @@ pure bool isActualRelationship(T, string f)() {
 pure string getRelationshipClassName(T, string f)() {
 	T t = new T;
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
-		return typeof(UDA.type).stringof;
+		foreach(UDA2; __traits(getAttributes, UDA))
+			static if (UDA2 == "dbIsModel")
+				return typeof(UDA.type).stringof;
 	}
 	
 	return null;
@@ -247,7 +250,9 @@ pure string getRelationshipClassName(T, string f)() {
 pure string getRelationshipClassModuleName(T, string f)() {
 	T t = new T;
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
-		return moduleName!(typeof(UDA.type));
+		foreach(UDA2; __traits(getAttributes, UDA))
+			static if (UDA2 == "dbIsModel")
+				return moduleName!(typeof(UDA.type));
 	}
 	
 	return null;
@@ -257,11 +262,29 @@ pure string getRelationshipClassModuleName(T, string f)() {
  * Get the name of property that the relationship's classes property is.
  */
 
-pure string getRelationshipPropertyName(T, string f)() {
+string getRelationshipPropertyName(T, string f)() {
 	T t = new T;
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
-		return UDA.name;
+		foreach(UDA2; __traits(getAttributes, UDA)) {
+			static if (UDA2 == "dbIsModel") {
+				return (UDA.init).name;
+			}
+		}
 	}
 	
 	return null;
+}
+
+/**
+ * 
+ */
+
+pure string getterName(string m)() {
+	static assert(m.length >= 2, "Property name must be more then 1 charactor long");
+	return "get" ~ cast(char)m[0].toUpper() ~ m [1 .. $];
+}
+
+pure string setterName(string m)() {
+	static assert(m.length >= 2, "Property name must be more then 1 charactor long");
+	return "set" ~ cast(char)m[0].toUpper() ~ m [1 .. $];
 }

@@ -65,10 +65,58 @@ version(unittest) {
 		ubyte edition;
 		
 		void t() {}
-
+		
 		@dbIgnore
 		string something;
 		
 		mixin OrmModel!Book;
+	}
+	
+	class Page {
+		@dbId
+		@dbName("_id")
+		string id;
+		
+		@dbName("book_id")
+		@dbActualModel!(Book, "isbn")
+		string isbn;
+		
+		mixin OrmModel!Page;
+	}
+	
+	@dbName("Books2")
+	class Book2 {
+		@dbId
+		@dbName("_")
+		Book2Id key = new Book2Id;
+		
+		@dbDefaultValue("0")
+		ubyte edition;
+		
+		void t() {}
+		
+		@dbIgnore
+		string something;
+		
+		mixin OrmModel!Book2;
+	}
+	
+	class Book2Id {
+		@dbId {
+			@dbName("id")
+			string isbn;
+		}
+	}
+	
+	class Page2 {
+		@dbId
+		@dbName("_id")
+		string id;
+		
+		@dbName("book")
+		@dbActualModel!(Book2, "key")
+		Book2Id book = new Book2Id;
+		
+		mixin OrmModel!Page2;
 	}
 }

@@ -11,6 +11,7 @@ public import dvorm.connection;
 public import dvorm.provider;
 public import dvorm.providers;
 public import dvorm.query;
+public import dvorm.relationship;
 
 // global connection information
 // aka default storage of models
@@ -28,4 +29,5 @@ mixin template OrmModel(C) {
 	mixin(logger!C());
 	mixin(connection());
 	mixin(queryGenerator!C());
+	mixin(relationshipGenerator!C());
 }

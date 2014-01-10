@@ -14,7 +14,7 @@ void ormLogAppend(string val) {
 	ormLog ~= val;
 }
 
-pure string logger(C, bool keysOnly = false, bool appendOnly = false, string prefix="")() {
+pure string logger(C, bool keysOnly = false, bool appendOnly = false, string prefix="", bool isFk=false, string fkPrefix="")() {
 	string ret;
 	if (!appendOnly) {
 		ret ~= "shared static this() {";
@@ -31,15 +31,29 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 				ids[m] = [];
 			}
 		}
-
+		
 		static if (isUsable!(C, m)()) {
 			static if (is(typeof(mixin("c." ~ m)) : Object)) {
 				// so we are an object.
-				ret ~= logger!(typeof(mixin("c." ~ m)), true, true, getNameValue!(C, m)() ~ "_")();
+				static if (isActualRelationship!(C, m)() && !isFk) {
+					mixin("import " ~ getRelationshipClassModuleName!(C, m)() ~ ";");
+					ret ~= logger!(typeof(mixin("c." ~ m)), true, true, getNameValue!(C, m)() ~ "_", true, getTableName!(mixin(getRelationshipClassName!(C, m)()))())();
+				} else {
+					ret ~= logger!(typeof(mixin("c." ~ m)), true, true, getNameValue!(C, m)() ~ "_", true)();
+				}
 			} else {
 				// default action. Mostly for non object based i.e. primitives or strings.
 				if (m in ids) {
-					ret ~= "ormLogVal ~= \"PK: [";
+					static if (isActualRelationship!(C, m)() && !isFk) {
+						mixin("import " ~ getRelationshipClassModuleName!(C, m)() ~ ";");
+						ret ~= "ormLogVal ~= \"PK FK: [" ~ getTableName!(mixin(getRelationshipClassName!(C, m)())) ~ "][";
+					} else {
+						static if (isFk) {
+							ret ~= "ormLogVal ~= \"FK: [" ~ fkPrefix ~ "][";
+						} else {
+							ret ~= "ormLogVal ~= \"PK: [";
+						}
+					}
 					ret ~= typeof(mixin("c." ~ m)).stringof ~ "] " ~ prefix ~ getNameValue!(C, m)() ~ "\";";
 					if (hasDefaultValue!(C, m))
 						ret ~= "ormLogVal ~= \" = " ~ getDefaultValue!(C, m)() ~ "\r\n\";";
@@ -49,13 +63,18 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 			}
 		}
 	}
-
+	
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)() && !is(typeof(mixin("c." ~ m)) : Object)) {
 			if (m !in ids) {
 				static if(!keysOnly) {
-					ret ~= "ormLogVal ~= \"[";
+					static if (isActualRelationship!(C, m)()) {
+						mixin("import " ~ getRelationshipClassModuleName!(C, m)() ~ ";");
+						ret ~= "ormLogVal ~= \"FK: [" ~ getTableName!(mixin(getRelationshipClassName!(C, m)())) ~ "][";
+					} else {
+						ret ~= "ormLogVal ~= \"[";
+					}
 					ret ~= typeof(mixin("c." ~ m)).stringof ~ "] " ~ prefix ~ getNameValue!(C, m)() ~ "\";";
 					if (hasDefaultValue!(C, m))
 						ret ~= "ormLogVal ~= \" = " ~ getDefaultValue!(C, m)() ~ "\r\n\";";
