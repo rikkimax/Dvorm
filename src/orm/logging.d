@@ -48,7 +48,7 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 						mixin("import " ~ getRelationshipClassModuleName!(C, m)() ~ ";");
 						ret ~= "ormLogVal ~= \"PK FK: [" ~ getTableName!(mixin(getRelationshipClassName!(C, m)())) ~ "][";
 					} else {
-						static if (isFk) {
+						static if (isFk && fkPrefix != "") {
 							ret ~= "ormLogVal ~= \"FK: [" ~ fkPrefix ~ "][";
 						} else {
 							ret ~= "ormLogVal ~= \"PK: [";
