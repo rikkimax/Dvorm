@@ -49,6 +49,12 @@ version(unittest) {
 	}
 
 	unittest {
+		Book.logMe();
+		Page.logMe();
+		Book2.logMe();
+		Page2.logMe();
+		Book2Id.logMe();
+		
 		assert(getTableName!Book() == "Books");
 		assert(getNameValue!(Book, "isbn") == "_id");
 		assert(getDefaultValue!(Book, "edition") == "0");

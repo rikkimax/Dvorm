@@ -17,7 +17,7 @@ void ormLogAppend(string val) {
 pure string logger(C, bool keysOnly = false, bool appendOnly = false, string prefix="", bool isFk=false, string fkPrefix="")() {
 	string ret;
 	if (!appendOnly) {
-		ret ~= "shared static this() {";
+		ret ~= "static void logMe() {";
 		ret ~= "string ormLogVal = \"" ~ getTableName!(C)() ~ ":\r\n\";";
 	}
 	
