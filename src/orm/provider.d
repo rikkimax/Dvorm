@@ -71,12 +71,14 @@ pure string objectBuilderCreator(C, string name = "objectBuilder")() {
 					"""
     static if (!is(typeof(ret." ~ m ~ ") : Object)) {
         static if (isBasicType!(typeof(ret." ~ m ~ "))) {
-            ret." ~ m ~ " = to!(typeof(ret." ~ m ~ "))(values[\"" ~ getNameValue!(C, m)() ~ "\"]);
+            if (\"" ~ getNameValue!(C, m)() ~ "\" in values)
+                ret." ~ m ~ " = to!(typeof(ret." ~ m ~ "))(values[\"" ~ getNameValue!(C, m)() ~ "\"]);
         } else static if (isArray!(typeof(ret." ~ m ~ ")) && 
 		    (typeof(ret." ~ m ~ ").stringof == \"string\" ||
 			typeof(ret." ~ m ~ ").stringof == \"dstring\" ||
 			typeof(ret." ~ m ~ ").stringof == \"wstring\")) {
-            ret." ~ m ~ " = values[\"" ~ getNameValue!(C, m)() ~ "\"];
+            if (\"" ~ getNameValue!(C, m)() ~ "\" in values)
+                ret." ~ m ~ " = values[\"" ~ getNameValue!(C, m)() ~ "\"];
         }
     } else {
         auto " ~ m ~ " = new typeof(ret." ~ m  ~ ");
