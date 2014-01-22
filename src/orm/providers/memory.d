@@ -75,33 +75,31 @@ class MemoryProvider : Provider {
 	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
 		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
-
 		size_t value = indexOfIds(table, idNames, valueNames, valueArray);
+		
 		string[string] values;
-
-		size_t vi;
-		foreach(vn; valueNames) {
-			values[vn] = valueArray[vi];
-			vi++;
+		
+		foreach(i, vn; valueNames) {
+			values[vn] = valueArray[i];
 		}
-
-		if (tableData[table].value.length < value)
+		
+		if (tableData[table].value.length > value)
 			tableData[table].value[value] = cast(shared)values;
 		else
 			tableData[table].value ~= cast(shared)values;
 	}
-
+	
 	override string[] handleQueryOp(string op, string prop, string value, string[] store) {
 		return store ~ [op ~ ":" ~ prop ~ ":" ~ value];
 	}
-
+	
 	override Object[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
 		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return null;
 		} else {
 			QOp[] ops;
-
+			
 			foreach(s; store) {
 				size_t i = s.indexOf(":");
 				if (i >= 0 && i + 1 < s.length) {
@@ -452,17 +450,16 @@ class MemoryProvider : Provider {
 private {
 	size_t indexOfIds(string table, string[] ids, string[] valueNames, string[] valueArray) {
 		TableData td = cast(TableData)tableData.get(table, cast(shared)TableData.init);
-		size_t i;
-		foreach(tda; td.value) {
+		foreach(i, tda; td.value) {
 			bool matches = true;
-			foreach(v; valueNames) {
+			foreach(j, v; valueNames) {
 				bool hasId = false;
 				foreach(id; ids) {
 					if (id == v)
 						hasId = true;
 				}
 				if (hasId) {
-					if (valueArray[i] != tda[v]) {
+					if (valueArray[j] != tda[v]) {
 						matches = false;
 					}
 				}
@@ -470,19 +467,16 @@ private {
 			if (matches) {
 				return i;
 			}
-			i++;
 		}
 		return tableData.get(table, TableData.init).value.length;
 	}
-
+	
 	size_t[] indexsOfIds(string table, string[] ids, string[] valueNames, string[] valueArray) {
 		TableData td = cast(TableData)tableData.get(table, cast(shared)TableData.init);
 		size_t[] ret;
-		size_t i;
-		foreach(tda; td.value) {
+		foreach(i, tda; td.value) {
 			bool matches = true;
-			size_t j;
-			foreach(v; valueNames) {
+			foreach(j, v; valueNames) {
 				bool hasId = false;
 				foreach(id; ids) {
 					if (id == v)
