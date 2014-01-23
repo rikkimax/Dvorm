@@ -129,7 +129,7 @@ pure string getNameOfHandle(C, string m, string subm,
 pure string getValueOfHandle(C, string m, string subm,
                              C c = new C)() {
 	static if (subm == "") {
-		return typeof("c." ~ m).stringof;
+		return typeof(mixin("c." ~ m)).stringof;
 	} else {
 		return typeof(mixin("c." ~ m ~ "." ~ subm)).stringof;
 	}
