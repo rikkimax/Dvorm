@@ -18,18 +18,18 @@ Methods are ignored all together.
 Default values can be given for a property to allow find* methods not require all values.
 
 ```D
-	@dbname("Books")
+	@dbName("Books")
 	class Book {
 		@id
-		@dbname("_id")
+		@dbName("_id")
 		string isbn;
 		
-		@defaultValue("0")
+		@dbDefaultValue("0")
 		ubyte edition;
 		
 		void t() {}
 
-		@ignore
+		@dbIgnore
 		string something;
 		
 		mixin OrmModel!Book;
