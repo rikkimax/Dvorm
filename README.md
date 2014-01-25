@@ -20,7 +20,7 @@ Default values can be given for a property to allow find* methods not require al
 ```D
 	@dbName("Books")
 	class Book {
-		@id
+		@dbId
 		@dbName("_id")
 		string isbn;
 		
@@ -93,4 +93,10 @@ For e.g. MongoDb multiple DbConnection's can be used for sharding.
 - M[] find()
 
   Gets all models given the query.
+  
+- size_t count()
+
+  The amount of models that would be returned if executed.
+- void remove()
+  Removes any models matching the criteria in query.
 
