@@ -508,11 +508,11 @@ private {
 """
 if (isFloat) {
     try {
-    if (!(mixin(\"to!float(op.value) " ~ o ~ " f\"))) stillOk = false;
+    if ((mixin(\"to!float(op.value) " ~ o ~ " f\"))) stillOk = false;
     } catch (Exception e) {stillOk = false;}
 } else if (isLong) {
     try {
-	if (!(mixin(\"to!long(op.value) " ~ o ~ " l\"))) stillOk = false;
+	if ((mixin(\"to!long(op.value) " ~ o ~ " l\"))) stillOk = false;
 	} catch (Exception e) {stillOk = false;}
 } else {
 	if (!(mixin(\"op.value " ~ o ~ " v\"))) stillOk = false;
