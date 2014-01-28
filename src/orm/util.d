@@ -171,36 +171,25 @@ pure string[] getAllValueNames(C, bool first = true, string prefix="")() {
 
 pure bool isUsable(C, string m)() {
 	C c = C.init;
-
-	static if (__traits(compiles, __traits(getProtection, mixin("c." ~ m))) &&
-	           __traits(getProtection, mixin("c." ~ m)) == "public") {
+	
+	static if (__traits(compiles, {auto value = typeof(mixin("c." ~ m)).init;})) {
 		static if (!__traits(hasMember, Object, m) &&
 		           !__traits(isAbstractFunction, Object, m) &&
 		           !__traits(isStaticFunction, mixin("c." ~ m)) &&
 		           !__traits(isOverrideFunction, mixin("c." ~ m)) &&
 		           !__traits(isFinalFunction, mixin("c." ~ m)) &&
-		           !(m.length >= 2 &&
-		  m[0 .. 2] == "op") &&
+		           !(m.length >= 2 && m[0 .. 2] == "op") &&
 		           !__traits(isVirtualMethod, mixin("c." ~ m))) {
-			// first stage done.
-		
-			static if (isArray!(typeof(mixin("c." ~ m))) && 
-			            (typeof(mixin("c." ~ m)).stringof == "string" ||
-			 			typeof(mixin("c." ~ m)).stringof == "dstring" ||
-			 			typeof(mixin("c." ~ m)).stringof == "wstring")) {
-				// so we are an string (not allow any old array right now).
-				return true;
-			}
 			
-			static if (isBasicType!(typeof(mixin("c." ~ m))) ||
-			           is(typeof(mixin("c." ~ m)) : Object) ||
-			           is(typeof(mixin("c." ~ m)) == enum)) {
-				// allow primitives and classes
+			static if (is(typeof(mixin("c." ~ m)) : Object) ||
+			           isBasicType!(typeof(mixin("c." ~ m))) ||
+			           is(typeof(mixin("c." ~ m)) == enum) ||
+			           is(typeof(mixin("c." ~ m)) == string)) {
 				return true;
+			} else {
+				return false;
 			}
-			
-			assert(0, "Type information for " ~ C.stringof ~ "." ~ m ~ " has not been implemented yet.");
-	    } else {
+		} else {
 			return false;
 		}
 	} else {
