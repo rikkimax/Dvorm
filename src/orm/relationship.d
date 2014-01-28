@@ -11,19 +11,16 @@ string relationshipGenerator(C)() {
 				static assert(m.length >= 2, "Property name must be more then 1 charactor long");
 				ret ~= "import " ~ getRelationshipClassModuleName!(C, m)() ~ ";\n";
 				
-				static if (is(typeof(mixin("c." ~ m)) : Object)) {
-					typeof(mixin("c." ~ m)) d = new typeof(mixin("c." ~ m));
-				}
-				
 				// getter
 				
 				ret ~= getRelationshipClassName!(C, m)() ~ " " ~ getterName!(m)() ~ "() {\n";
 				ret ~= "    return " ~ getRelationshipClassName!(C, m)() ~ ".findOne(";
 				
-				static if (is(typeof(mixin("c." ~ m)) : Object)) {
+				static if (isAnObjectType!(typeof(mixin("c." ~ m)))) {
+					typeof(mixin("c." ~ m)) d = newValueOfType!(typeof(mixin("c." ~ m)));
 					foreach(n; __traits(allMembers, typeof(d))) {
 						static if (isUsable!(typeof(d), n)() && !shouldBeIgnored!(typeof(d), n)()) {
-							static assert(!is(typeof(mixin("d." ~ n)) : Object), "Recursive id objects not allowed.");
+							static assert(!isAnObjectType!(typeof(mixin("d." ~ n))), "Recursive id objects not allowed.");
 							ret ~= m ~ "." ~ n ~ ",";
 						}
 					}
@@ -42,8 +39,8 @@ string relationshipGenerator(C)() {
 				ret ~= "void " ~ setterName!(m)() ~ "(" ~ getRelationshipClassName!(C, m)() ~ " value) {\n";
 				ret ~= "    this." ~ m ~ " = ";
 				
-				static if (is(typeof(mixin("c." ~ m)) : Object)) {					
-					ret ~= "new " ~ typeof(mixin("c." ~ m)).stringof ~ ";\n";
+				static if (isAnObjectType!(typeof(mixin("c." ~ m)))) {					
+					ret ~= "newValueOfType!(" ~ typeof(mixin("c." ~ m)).stringof ~ ");\n";
 					foreach(n; __traits(allMembers, typeof(d))) {
 						static if (isUsable!(typeof(d), n)() && !shouldBeIgnored!(typeof(d), n)()) {
 							static assert(!is(typeof(mixin("d." ~ n)) : Object), "Recursive id objects not allowed.");

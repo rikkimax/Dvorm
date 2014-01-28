@@ -14,46 +14,46 @@ private {
 }
 
 class MemoryProvider : Provider {
-	override Object[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection) {
+	override void*[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection) {
 		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
 		
 		size_t[] value = indexsOfIds(table, argNames, argNames, args);
-
-		Object[] ret;
+		
+		void*[] ret;
 		foreach(v; value) {
 			ret ~= builder(cast(string[string])tableData[table].value[v]);
 		}
 		return ret;
 	}
-
-	override Object[] findAll(string table, ObjectBuilder builder, DbConnection[] connection) {
+	
+	override void*[] findAll(string table, ObjectBuilder builder, DbConnection[] connection) {
 		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return null;
 		} else {
-			Object[] ret;
+			void*[] ret;
 			foreach(d; datums.value) {
 				ret ~= builder(cast(string[string])d);
 			}
 			return ret;
 		}
 	}
-
-	override Object findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection) {
+	
+	override void* findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection) {
 		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
-
+		
 		size_t value = indexOfIds(table, argNames, argNames, args);
 		if (value >= 0 && value < tableData[table].value.length)
 			return builder(cast(string[string])tableData[table].value[value]);
 		return null;
 	}
-
+	
 	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection) {
 		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
-
+		
 		size_t value = indexOfIds(table, idNames, valueNames, valueArray);
 		if (tableData[table].value.length > value) {
 			if (value > 0 && value < tableData[table].value.length)
@@ -94,7 +94,7 @@ class MemoryProvider : Provider {
 		return store ~ [op ~ ":" ~ prop ~ ":" ~ value];
 	}
 	
-	override Object[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
+	override void*[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
 		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return null;
@@ -110,15 +110,15 @@ class MemoryProvider : Provider {
 					if (i >= 0 && i + 1 < prop.length) {
 						string value = prop[i + 1.. $];
 						prop = prop[0 .. i];
-
+						
 						ops ~= QOp(op, prop, value);
 					}
 				}
 			}
-
+			
 			int num_skip = 0, num_docs_per_chunk = 0;
 			size_t i;
-
+			
 			foreach(op; ops) {
 				if (op.prop == "") {
 					switch(op.op) {
@@ -134,18 +134,18 @@ class MemoryProvider : Provider {
 					}
 				}
 			}
-
-			Object[] ret;
+			
+			void*[] ret;
 			foreach(d; datums.value) {
 				bool stillOk = true;
-
+				
 				foreach(k, v; d) {
 					bool isFloat = false;
 					bool isLong = false;
-
+					
 					float f;
 					long l;
-
+					
 					try {
 						f = to!float(v);
 						isFloat = true;
@@ -154,32 +154,32 @@ class MemoryProvider : Provider {
 						l = to!long(v);
 						isLong = true;
 					} catch (Exception e) {}
-
+					
 					foreach(op; ops) {
 						if (op.prop == k) {
 							switch(op.op) {
-
+								
 								case "eq":
 									mixin(getQueryOp!("==")());
 									break;
 								case "neq":
 									mixin(getQueryOp!("!=")());
 									break;
-
+									
 								case "lt":
 									mixin(getQueryOp!("<")());
 									break;
 								case "lte":
 									mixin(getQueryOp!("<=")());
 									break;
-
+									
 								case "mt":
 									mixin(getQueryOp!(">")());
 									break;
 								case "mte":
 									mixin(getQueryOp!(">=")());
 									break;
-
+									
 								case "like":
 									if (isFloat) {
 										try {
@@ -194,14 +194,14 @@ class MemoryProvider : Provider {
 										if (!(loc >= 0)) stillOk = false;
 									}
 									break;
-
+									
 								case "startAt":
 									num_skip = to!int(v);
 									break;
 								case "maxAmount":
 									num_docs_per_chunk = to!int(v);
 									break;
-
+									
 								default:
 									stillOk = false;
 									break;
@@ -209,7 +209,7 @@ class MemoryProvider : Provider {
 						}
 					}
 				}
-
+				
 				if (stillOk) {
 					if ((i > num_skip || num_skip == 0) && (i < num_skip + num_docs_per_chunk || num_docs_per_chunk == 0))
 						ret ~= builder(cast(string[string])d);
@@ -495,16 +495,16 @@ private {
 		}
 		return ret;
 	}
-
+	
 	struct QOp {
 		string op;
 		string prop;
 		string value;
 	}
-
+	
 	pure string getQueryOp(string o)() {
 		return 
-"""
+			"""
 if (isFloat) {
     try {
     if ((mixin(\"to!float(op.value) " ~ o ~ " f\"))) stillOk = false;

@@ -19,7 +19,7 @@ mixin(connection());
 
 mixin template OrmModel(C) {
 	import std.traits : isBasicType, isArray;
-
+	
 	mixin(findOne!C());
 	mixin(find!C());
 	mixin(findAll!C());

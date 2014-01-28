@@ -33,7 +33,7 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 		}
 		
 		static if (isUsable!(C, m)()) {
-			static if (is(typeof(mixin("c." ~ m)) : Object)) {
+			static if (isAnObjectType!(typeof(mixin("c." ~ m)))) {
 				// so we are an object.
 				static if (isActualRelationship!(C, m)() && !isFk) {
 					mixin("import " ~ getRelationshipClassModuleName!(C, m)() ~ ";");
@@ -66,28 +66,30 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 	
 	
 	foreach(m; __traits(allMembers, C)) {
-		static if (isUsable!(C, m)() && !is(typeof(mixin("c." ~ m)) : Object)) {
-			if (m !in ids) {
-				static if(!keysOnly) {
-					static if (isActualRelationship!(C, m)()) {
-						mixin("import " ~ getRelationshipClassModuleName!(C, m)() ~ ";");
-						ret ~= "ormLogVal ~= \"FK: [" ~ getTableName!(mixin(getRelationshipClassName!(C, m)())) ~ "][";
-					} else {
-						ret ~= "ormLogVal ~= \"[";
+		static if (isUsable!(C, m)()) {
+			static if (!isAnObjectType!(typeof(mixin("c." ~ m)))) {
+				if (m !in ids) {
+					static if(!keysOnly) {
+						static if (isActualRelationship!(C, m)()) {
+							mixin("import " ~ getRelationshipClassModuleName!(C, m)() ~ ";");
+							ret ~= "ormLogVal ~= \"FK: [" ~ getTableName!(mixin(getRelationshipClassName!(C, m)())) ~ "][";
+						} else {
+							ret ~= "ormLogVal ~= \"[";
+						}
+						ret ~= typeof(mixin("c." ~ m)).stringof ~ "] " ~ prefix ~ getNameValue!(C, m)() ~ "\";";
+						if (hasDefaultValue!(C, m))
+							ret ~= "ormLogVal ~= \" = " ~ getDefaultValue!(C, m)() ~ "\r\n\";";
+						else
+							ret ~= "ormLogVal ~= \"\r\n\";";
 					}
-					ret ~= typeof(mixin("c." ~ m)).stringof ~ "] " ~ prefix ~ getNameValue!(C, m)() ~ "\";";
-					if (hasDefaultValue!(C, m))
-						ret ~= "ormLogVal ~= \" = " ~ getDefaultValue!(C, m)() ~ "\r\n\";";
-					else
-						ret ~= "ormLogVal ~= \"\r\n\";";
 				}
 			}
 		}
 	}
-
+	
 	if (!appendOnly) {
 		ret ~= "ormLogVal ~= \"=======----=======\r\n\";";
-
+		
 		ret ~= "ormLogAppend(ormLogVal);";
 		ret ~= "}";
 	}

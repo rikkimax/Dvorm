@@ -4,15 +4,23 @@ import std.traits;
 
 class Query(string moduleName, string name) {
 	mixin("import " ~ moduleName ~ ";");
-	
+	mixin("import std.conv : to;");
 	private string[] store;
 	
 	mixin(queryInterface!(mixin(name))());
 	
 	mixin(name ~ "[] " ~ q{find() {
 			mixin(objectBuilderCreator!(mixin(name))());
-			mixin(name ~ "[] ret = cast(" ~ name ~ "[])" ~ q{provider(getDbType!(mixin(name))).handleQuery(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, mixin(name).databaseConnection());});
-			return ret;
+			mixin("return dePointerArrayValues!(" ~ name ~ ")(cast(" ~ name ~ "*[])" ~
+			      q{
+				provider(getDbType!(mixin(name))).handleQuery(
+					store,
+					getTableName!(mixin(name))(),
+					getAllIdNames!(mixin(name))(),
+					getAllValueNames!(mixin(name))(),
+					&objectBuilder,
+					mixin(name).databaseConnection()));
+			});
 		}});
 	
 	mixin(q{
@@ -29,13 +37,11 @@ class Query(string moduleName, string name) {
 	
 	mixin("""
 Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") maxAmount(ushort value) {
-	mixin(objectBuilderCreator!(mixin(name))());
 	mixin(\"store = provider(getDbType!(mixin(name))).handleQueryOp(\\\"maxAmount\\\", \\\"\\\", to!string(value), store);\");
     return this;
 }
 
 Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") startAt(ushort value) {
-	mixin(objectBuilderCreator!(mixin(name))());
 	mixin(\"store = provider(getDbType!(mixin(name))).handleQueryOp(\\\"startAt\\\", \\\"\\\", to!string(value), store);\");
     return this;
 }
@@ -49,7 +55,7 @@ pure string queryInterface(C)() {
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m) && !shouldBeIgnored!(C, m)) {
-			static if (!is(typeof(mixin("c." ~ m)) : Object) && !is(typeof(mixin("c." ~ m)) == enum)) {
+			static if (!isAnObjectType!(typeof(mixin("c." ~ m))) && !is(typeof(mixin("c." ~ m)) == enum)) {
 				ret ~= queryIGen!(C, m, "eq")();
 				ret ~= queryIGen!(C, m, "neq")();
 				ret ~= queryIGen!(C, m, "lt")();
@@ -60,7 +66,7 @@ pure string queryInterface(C)() {
 			} else static if (!is(typeof(mixin("c." ~ m)) == enum)) {
 				foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
 					static if (isUsable!(typeof(mixin("c." ~ m)), n) && !shouldBeIgnored!(typeof(mixin("c." ~ m)), n)) {
-						static if (!is(typeof(mixin("c." ~ m ~ "." ~ n)) : Object)) {
+						static if (!isAnObjectType!(typeof(mixin("c." ~ m ~ "." ~ n)))) {
 							ret ~= queryIGen!(C, m, "eq", n)();
 							ret ~= queryIGen!(C, m, "neq", n)();
 							ret ~= queryIGen!(C, m, "lt", n)();
@@ -109,8 +115,7 @@ pure string queryIGen(C, string m, string op, string subm="",
                       string valueType = getValueOfHandle!(C, m, subm)())() {
 	return 
 		"""
-Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\")" ~ nameOfFunc ~ "(" ~ valueType ~ " value) {
-    import std.conv;
+Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\") " ~ nameOfFunc ~ "(" ~ valueType ~ " value) {
     store = provider(getDbType!" ~ C.stringof ~ ").handleQueryOp(\"" ~ op ~ "\", \"" ~ handleName ~ "\", " ~ typeValue ~ ", store); 
     return this;
 }

@@ -7,7 +7,7 @@ static if (__traits(compiles, {import vibe.data.serialization;})) {
 string connection() {
 	string ret;
 	ret ~=
-"""
+		"""
 static {
     @dbIgnore
 	private DbConnection[] databaseConnection_;
@@ -34,11 +34,6 @@ static {
     void opAssign(DbConnection[] connection) {
         databaseConnection(connection);
     }
-
-    @dbIgnore
-    DbConnection[] opCast(T : DbConnection[])() {
-        return databaseConnection();
-    }
 }
 """;
 	return ret;
@@ -46,26 +41,26 @@ static {
 
 struct DbConnection {
 	DbType type;
-
+	
 	static if (__traits(compiles, {import vibe.data.serialization;})) {
 		// just so we can use this for configuration :3
 	@optional:
 	}
-
+	
 	string host;
 	ushort port;
-
+	
 	string user;
 	string pass;
-
+	
 	string database;
 }
 
 enum DbType : string {
 	Memory = "Memory",
 	Mongo = "Mongo"/*,
-	Redis = "Redis",
-	Mysql = "Mysql",
-	Postgresql = "Postgresql",
-	Sqlite = "Sqlite"*/
+	                Redis = "Redis",
+	                Mysql = "Mysql",
+	                Postgresql = "Postgresql",
+	                Sqlite = "Sqlite"*/
 }

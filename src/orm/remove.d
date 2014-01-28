@@ -6,7 +6,7 @@ import std.traits;
 string remove(C)() {
 	string ret;
 	ret ~= "void remove() {";
-
+	
 	string valueArray;
 	valueArray ~= "string[] valueArray = [";
 	
@@ -28,7 +28,7 @@ string remove(C)() {
 			}
 			
 			if (hasId) {
-				static if (is(typeof(mixin("c." ~ m)) : Object)) {
+				static if (isAnObjectType!(typeof(mixin("c." ~ m)))) {
 					//assert(0, "Have yet to enable saving of objects");
 					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
 					mixin(typeof(mixin("c." ~ m)).stringof ~ " d = newValueOfType!" ~ typeof(mixin("c." ~ m)).stringof ~ ";");
@@ -37,7 +37,7 @@ string remove(C)() {
 							foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
 								static if (is(UDA : dbId)) {
 									valueNames ~= "\"" ~ m  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
-									static if (is(typeof(mixin("d." ~ n)) : Object)) {
+									static if (isAnObjectType!(typeof(mixin("d." ~ n)))) {
 										assert(0, "Cannot use an object as an id, when more then one recursion. " ~ C.stringof ~ "." ~ m ~ "." ~ n);
 									} else static if (typeof(mixin("d." ~ n)).stringof != "string") {
 										idNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
@@ -78,7 +78,7 @@ string remove(C)() {
 	
 	// database dependent find part
 	ret ~= "provider(getDbType!" ~ C.stringof ~ ").remove!" ~ C.stringof ~ "(idNames, valueNames, valueArray);";
-
+	
 	ret ~= "}";
 	return ret;
 }

@@ -103,7 +103,7 @@ pure string[] getAllIds(C, bool first = true, string prefix="")() {
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
-			static if(is(typeof(mixin("c." ~ m)) : Object)) {
+			static if(isAnObjectType!(typeof(mixin("c." ~ m)))) {
 				static if (first)
 					ret ~= getAllIds!(typeof(mixin("c." ~ m)), false, getNameValue!(C, m) ~ "_")();
 			} else {
@@ -122,7 +122,7 @@ pure string[] getAllIdNames(C, bool first = true, string prefix="")() {
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
-			static if(is(typeof(mixin("c." ~ m)) : Object)) {
+			static if(isAnObjectType!(typeof(mixin("c." ~ m)))) {
 				static if (first)
 					ret ~= getAllIdNames!(typeof(mixin("c." ~ m)), false, m ~ "_")();
 			} else {
@@ -141,7 +141,7 @@ pure string[] getAllValues(C, bool first = true, string prefix="")() {
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
-			static if(is(typeof(mixin("c." ~ m)) : Object)) {
+			static if(isAnObjectType!(typeof(mixin("c." ~ m)))) {
 				static if (first)
 					ret ~= getAllValues!(typeof(mixin("c." ~ m)), false, m ~ "_")();
 			} else {
@@ -158,7 +158,7 @@ pure string[] getAllValueNames(C, bool first = true, string prefix="")() {
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
-			static if(is(typeof(mixin("c." ~ m)) : Object)) {
+			static if(isAnObjectType!(typeof(mixin("c." ~ m)))) {
 				static if (first)
 					ret ~= getAllValueNames!(typeof(mixin("c." ~ m)), false, m ~ "_")();
 			} else {
@@ -173,19 +173,23 @@ pure bool isUsable(C, string m)() {
 	C c = newValueOfType!C;
 	
 	static if (__traits(compiles, {auto value = typeof(mixin("c." ~ m)).init;})) {
-		static if (!__traits(hasMember, Object, m) &&
-		           !__traits(isAbstractFunction, Object, m) &&
-		           !__traits(isStaticFunction, mixin("c." ~ m)) &&
-		           !__traits(isOverrideFunction, mixin("c." ~ m)) &&
-		           !__traits(isFinalFunction, mixin("c." ~ m)) &&
-		           !(m.length >= 2 && m[0 .. 2] == "op") &&
-		           !__traits(isVirtualMethod, mixin("c." ~ m))) {
-			
-			static if (is(typeof(mixin("c." ~ m)) : Object) ||
-			           isBasicType!(typeof(mixin("c." ~ m))) ||
-			           is(typeof(mixin("c." ~ m)) == enum) ||
-			           is(typeof(mixin("c." ~ m)) == string)) {
-				return true;
+		static if (__traits(compiles, {auto value = typeof(mixin("c." ~ m)).init;})) {
+			static if (!__traits(hasMember, Object, m) &&
+			           !__traits(isAbstractFunction, Object, m) &&
+			           !__traits(isStaticFunction, mixin("c." ~ m)) &&
+			           !__traits(isOverrideFunction, mixin("c." ~ m)) &&
+			           !__traits(isFinalFunction, mixin("c." ~ m)) &&
+			           !(m.length >= 2 && m[0 .. 2] == "op") &&
+			           !__traits(isVirtualMethod, mixin("c." ~ m))) {
+				
+				static if (isAnObjectType!(typeof(mixin("c." ~ m))) ||
+				           isBasicType!(typeof(mixin("c." ~ m))) ||
+				           is(typeof(mixin("c." ~ m)) == enum) ||
+				           is(typeof(mixin("c." ~ m)) == string)) {
+					return true;
+				} else {
+					return false;
+				}
 			} else {
 				return false;
 			}
@@ -285,7 +289,7 @@ pure string setterName(string m)() {
  * If a primitive then it'll be .init
  */
 pure T newValueOfType(T)() {
-	static if (is(T : Object) || is(T == struct)) {
+	static if (isAnObjectType!T) {
 		static if (__traits(compiles, {T value = new T();})) {
 			return new T();
 		} else static if (__traits(compiles, {T value = new T;})) {
@@ -296,4 +300,24 @@ pure T newValueOfType(T)() {
 	} else {
 		return T.init;
 	}
+}
+
+/**
+ * Checks if a given type is either a class or a struct.
+ */
+pure bool isAnObjectType(T)() {
+	return is(T : Object) || is(T == struct);
+}
+
+/**
+ * 
+ */
+
+T[] dePointerArrayValues(T)(T*[] values) {
+	T[] ret;
+	foreach(v; values) {
+		ret ~= *v;
+	}
+	
+	return ret;
 }

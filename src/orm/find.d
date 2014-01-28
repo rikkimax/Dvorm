@@ -9,7 +9,7 @@ string find(C)() {
 	
 	string argArray;
 	argArray ~= "string[] args = [";
-
+	
 	string argNames;
 	argNames ~= "string[] argNames = [";
 	
@@ -20,17 +20,17 @@ string find(C)() {
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
-
+			
 			bool hasId = false;
-
+			
 			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 				static if (is(UDA : dbId)) {
 					hasId = true;
 				}
 			}
-
+			
 			if (hasId) {
-				static if (is(typeof(mixin("c." ~ m)) : Object)) {
+				static if (isAnObjectType!(typeof(mixin("c." ~ m)))) {
 					// so we are an object.
 					//assert(0, "Cannot use an object as an id");
 					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
@@ -40,7 +40,7 @@ string find(C)() {
 							foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
 								static if (is(UDA : dbId)) {
 									argNames ~= "\"" ~ getNameValue!(C, m)() ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
-
+									
 									string argNum = to!string(indexCount);
 									ret ~= typeof(mixin("d." ~ n)).stringof ~ " v" ~ argNum;
 									
@@ -97,12 +97,12 @@ string find(C)() {
 	} else {
 		assert(0, "You derped. Type " ~ C.stringof ~ " does not have any id's, so cannot be an dvorm model.");
 	}
-
+	
 	ret ~= ") {" ~ C.stringof ~ "[] ret;import std.conv : to;";
-
+	
 	argArray ~= "];";
 	ret ~= argArray;
-
+	
 	argNames ~= "];";
 	ret ~= argNames;
 	

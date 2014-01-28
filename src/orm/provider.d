@@ -17,16 +17,20 @@ void registerProvider(DbType type, Provider p) {
 }
 
 abstract class Provider {
-	Object[] find(C)(string[] argNames, string[] args, ObjectBuilder builder) {
-		return find(getTableName!C(), argNames, args, builder, C.databaseConnection());
+	C[] find(C)(string[] argNames, string[] args, ObjectBuilder builder) {
+		return dePointerArrayValues!(C)(cast(C*[])find(getTableName!C(), argNames, args, builder, C.databaseConnection()));
 	}
 	
-	Object[] findAll(C)(ObjectBuilder builder) {
-		return findAll(getTableName!C(), builder, C.databaseConnection());
+	C[] findAll(C)(ObjectBuilder builder) {
+		return dePointerArrayValues!(C)(cast(C*[])findAll(getTableName!C(), builder, C.databaseConnection()));
 	}
 	
-	Object findOne(C)(string[] argNames, string[] args, ObjectBuilder builder) {
-		return findOne(getTableName!C(), argNames, args, builder, C.databaseConnection());
+	C findOne(C)(string[] argNames, string[] args, ObjectBuilder builder) {
+		auto value = findOne(getTableName!C(), argNames, args, builder, C.databaseConnection());
+		if (value is null)
+			return null;
+		else
+			return *cast(C*)value;
 	}
 	
 	void remove(C)(string[] idNames, string[] valueNames, string[] valueArray) {
@@ -41,76 +45,75 @@ abstract class Provider {
 		save(getTableName!C(), idNames, valueNames, valueArray, builder, C.databaseConnection());
 	}
 	
-	Object[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
-	Object[] findAll(string table, ObjectBuilder builder, DbConnection[] connection);
-	Object findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
+	void*[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
+	void*[] findAll(string table, ObjectBuilder builder, DbConnection[] connection);
+	void* findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
 	void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection);
 	void removeAll(string table, DbConnection[] connection);
 	void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection);
 	
 	string[] handleQueryOp(string op, string prop, string value, string[] store);
-	Object[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection);
+	void*[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection);
 	size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection);
 	void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection);
 }
 
-alias Object delegate(string[string] values) ObjectBuilder;
+alias void* delegate(string[string] values) ObjectBuilder;
 
 pure string objectBuilderCreator(C, string name = "objectBuilder")() {
-	string ret;
-	ret ~= "Object " ~ name ~ "(string[string] values) {\n";
+	string ret = "void* " ~ name ~ "(string[string] values) {\n";
 	ret ~= "    import " ~ moduleName!C ~ ";\n";
 	ret ~= "    import std.conv : to;\n";
-	ret ~= "    " ~ C.stringof ~ " ret = newValueOfType!" ~ C.stringof ~ ";\n";
-	ret ~= "    string keyValueOfName;";
+	ret ~= "    " ~ C.stringof ~ " ret = newValueOfType!(" ~ C.stringof ~ ")();\n";
+	ret ~= "    string keyValueOfName;\n";
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)) {
 			static if (!shouldBeIgnored!(C, m)) {
 				ret ~= 
 					"""
-    static if (!is(typeof(ret." ~ m ~ ") : Object)) {
-        static if (isBasicType!(typeof(ret." ~ m ~ "))) {
-            if (\"" ~ getNameValue!(C, m)() ~ "\" in values)
-                ret." ~ m ~ " = to!(typeof(ret." ~ m ~ "))(values[\"" ~ getNameValue!(C, m)() ~ "\"]);
-        } else static if (isArray!(typeof(ret." ~ m ~ ")) && 
-		    (typeof(ret." ~ m ~ ").stringof == \"string\" ||
-			typeof(ret." ~ m ~ ").stringof == \"dstring\" ||
-			typeof(ret." ~ m ~ ").stringof == \"wstring\")) {
-            if (\"" ~ getNameValue!(C, m)() ~ "\" in values)
-                ret." ~ m ~ " = values[\"" ~ getNameValue!(C, m)() ~ "\"];
-        }
-    } else {
-        auto " ~ m ~ " = new typeof(ret." ~ m  ~ ");
-        foreach(n; __traits(allMembers, typeof(ret." ~ m ~ "))) {
-            static if (isUsable!(typeof(ret." ~ m  ~ "), n)() && !shouldBeIgnored!(typeof(ret." ~ m  ~ "), n)()) {
-                static if (!is(typeof(mixin(\"" ~ m ~ ".\" ~ n)) : Object)) {
-                    keyValueOfName = \"" ~ getNameValue!(C, m)() ~ "_\" ~ getNameValue!(typeof(ret." ~ m  ~ "), n)();
-                    static if (isBasicType!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))) {
-                       if (keyValueOfName in values) {
-                           mixin(\"" ~ m ~ ".\" ~ n) = to!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))(values[keyValueOfName]);
-                       }
-                    } else static if (isArray!(typeof(mixin(\"" ~ m ~ ".\" ~ n))) && 
-			            (typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"string\" ||
-			 			typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"dstring\" ||
-			 			typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"wstring\")) {
-                       if (keyValueOfName in values) {
-                           mixin(\"" ~ m ~ ".\" ~ n) = to!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))(values[keyValueOfName]);
-                       }
-                    }
-                } else {
-                    assert(0, \"Cannot have ids within more then one recursion of an object\");
-                }
-            }
-        }
-        ret." ~ m ~ " = " ~ m ~ ";
-    }
-""";
+	static if (!isAnObjectType!(typeof(ret." ~ m ~ "))) {
+		 static if (isBasicType!(typeof(ret." ~ m ~ "))) {
+			if (\"" ~ getNameValue!(C, m)() ~ "\" in values)
+				ret." ~ m ~ " = to!(typeof(ret." ~ m ~ "))(values[\"" ~ getNameValue!(C, m)() ~ "\"]);
+			} else static if (isArray!(typeof(ret." ~ m ~ ")) && 
+							 (typeof(ret." ~ m ~ ").stringof == \"string\" ||
+							  typeof(ret." ~ m ~ ").stringof == \"dstring\" ||
+							  typeof(ret." ~ m ~ ").stringof == \"wstring\")) {
+				if (\"" ~ getNameValue!(C, m)() ~ "\" in values)
+					ret." ~ m ~ " = values[\"" ~ getNameValue!(C, m)() ~ "\"];
+				}
+			} else {
+				auto " ~ m ~ " = newValueOfType!(typeof(ret." ~ m  ~ "));
+				foreach(n; __traits(allMembers, typeof(ret." ~ m ~ "))) {
+					static if (isUsable!(typeof(ret." ~ m  ~ "), n)() && !shouldBeIgnored!(typeof(ret." ~ m  ~ "), n)()) {
+						static if (!newValueOfType!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))) {
+							keyValueOfName = \"" ~ getNameValue!(C, m)() ~ "_\" ~ getNameValue!(typeof(ret." ~ m  ~ "), n)();
+							static if (isBasicType!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))) {
+								if (keyValueOfName in values) {
+									mixin(\"" ~ m ~ ".\" ~ n) = to!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))(values[keyValueOfName]);
+								}
+							} else static if (isArray!(typeof(mixin(\"" ~ m ~ ".\" ~ n))) && 
+											 (typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"string\" ||
+											  typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"dstring\" ||
+											  typeof(mixin(\"" ~ m ~ ".\" ~ n)).stringof == \"wstring\")) {
+								if (keyValueOfName in values) {
+									mixin(\"" ~ m ~ ".\" ~ n) = to!(typeof(mixin(\"" ~ m ~ ".\" ~ n)))(values[keyValueOfName]);
+								}
+							}
+						} else {
+							assert(0, \"Cannot have ids within more then one recursion of an object\");
+						}
+					}
+				}
+				ret." ~ m ~ " = " ~ m ~ ";
+			}
+	 """;
 			}
 		}
 	}
 	
-	ret ~= "    return ret;\n";
-	ret ~= "}";
+	ret ~= "    return [ret].ptr;\n";
+	ret ~= "}\n";
 	return ret;
 }

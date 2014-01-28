@@ -1,5 +1,6 @@
 module dvorm.unittests;
 import dvorm;
+import std.stdio;
 
 version(unittest) {
 	void unittest1(DbConnection[] cons...) {
@@ -23,7 +24,7 @@ version(unittest) {
 		
 		assert(Book.findOne(book.isbn) !is null);
 		assert(Book.findOne(book.isbn).isbn == book.isbn);
-
+		
 		assert(Book.findAll().length == 2);
 		
 		bool hasFirst = false;
@@ -33,6 +34,8 @@ version(unittest) {
 			if (b.isbn == book2.isbn) hasSecond = true;
 		}
 		assert(hasFirst && hasSecond);
+		
+		writeln(Book.query().isbn_eq(book.isbn).maxAmount(1).find());
 		
 		assert(Book.query().isbn_eq(book.isbn).maxAmount(1).find().length == 1);
 		assert(Book.query().isbn_eq(book.isbn).maxAmount(1).find()[0].isbn == book.isbn);
@@ -100,7 +103,7 @@ version(unittest) {
 	class Book2 {
 		@dbId
 		@dbName("_")
-		Book2Id key = new Book2Id;
+		Book2Id key;
 		
 		@dbDefaultValue("0")
 		ubyte edition;
@@ -113,7 +116,7 @@ version(unittest) {
 		mixin OrmModel!Book2;
 	}
 	
-	class Book2Id {
+	struct Book2Id {
 		@dbId {
 			@dbName("id")
 			string isbn;
@@ -127,7 +130,7 @@ version(unittest) {
 		
 		@dbName("book")
 		@dbActualModel!(Book2, "key")
-		Book2Id book = new Book2Id;
+		Book2Id book;
 		
 		mixin OrmModel!Page2;
 	}

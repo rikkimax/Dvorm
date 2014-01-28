@@ -16,18 +16,18 @@ string save(C)() {
 	string idNames;
 	idNames ~= "string[] idNames = [";
 	
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {
 			foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 				static if (is(UDA : dbId)) {
-					static if (!is(typeof(mixin("c." ~ m)) : Object))
+					static if (!isAnObjectType!(typeof(mixin("c." ~ m))))
 						idNames ~= "\"" ~ getNameValue!(C, m)() ~ "\",";
 				}
 			}
 			
-			static if (is(typeof(mixin("c." ~ m)) : Object)) {
+			static if (isAnObjectType!(typeof(mixin("c." ~ m)))) {
 				//assert(0, "Have yet to enable saving of objects");
 				mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
 				mixin("auto d = newValueOfType!(typeof(c." ~ m ~ "));");
@@ -37,7 +37,7 @@ string save(C)() {
 							static if (is(UDA : dbId)) {
 								idNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
 								valueNames ~= "\"" ~ getNameValue!(C, m)()  ~ "_" ~ getNameValue!(typeof(d), n)() ~ "\",";
-								static if (is(typeof(mixin("d." ~ n)) : Object)) {
+								static if (isAnObjectType!(typeof(mixin("d." ~ n)))) {
 									assert(0, "Cannot use an object as an id, when more then one recursion. " ~ C.stringof ~ "." ~ m ~ "." ~ n);
 								} else static if (typeof(mixin("d." ~ n)).stringof != "string") {
 									valueArray ~= "to!string(" ~ m ~ "." ~ n ~ "),";
