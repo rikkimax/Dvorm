@@ -21,7 +21,7 @@ pure string logger(C, bool keysOnly = false, bool appendOnly = false, string pre
 		ret ~= "string ormLogVal = \"" ~ getTableName!(C)() ~ ":\r\n\";";
 	}
 	
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	void[][string] ids;
 	

@@ -9,11 +9,11 @@ string findOne(C)() {
 	
 	string argArray;
 	argArray ~= "string[] args = [";
-
+	
 	string argNames;
 	argNames ~= "string[] argNames = [";
 	
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	uint indexCount;
 	bool hasIndex;

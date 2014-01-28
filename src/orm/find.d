@@ -34,7 +34,7 @@ string find(C)() {
 					// so we are an object.
 					//assert(0, "Cannot use an object as an id");
 					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
-					mixin(typeof(mixin("c." ~ m)).stringof ~ " d = new " ~ typeof(mixin("c." ~ m)).stringof ~ ";");
+					mixin(typeof(mixin("c." ~ m)).stringof ~ " d = newValueOfType!" ~ typeof(mixin("c." ~ m)).stringof ~ ";");
 					foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
 						static if (isUsable!(typeof(d), n)()) {
 							foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
