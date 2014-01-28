@@ -29,7 +29,7 @@ struct dbActualModel(T, string prop) {
 }
 
 pure string getDefaultValue(C, string m)() {
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (__traits(compiles, {dbDefaultValue v = UDA;})) {
@@ -40,7 +40,7 @@ pure string getDefaultValue(C, string m)() {
 }
 
 pure bool hasDefaultValue(C, string m)() {
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (__traits(compiles, {dbDefaultValue v = UDA;})) {
@@ -51,7 +51,7 @@ pure bool hasDefaultValue(C, string m)() {
 }
 
 pure string getNameValue(C, string m)() {
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (__traits(compiles, {dbName v = UDA;})) {
@@ -71,7 +71,7 @@ pure string getTableName(C)() {
 }
 
 pure bool shouldBeIgnored(C, string m)() {
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	static if (__traits(compiles, __traits(getProtection, mixin("c." ~ m))) &&
 	           __traits(getProtection, mixin("c." ~ m)) == "public") {
@@ -87,7 +87,7 @@ pure bool shouldBeIgnored(C, string m)() {
 }
 
 pure bool isAnId(C, string m)() {
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (is(UDA : dbId)) {
@@ -99,7 +99,7 @@ pure bool isAnId(C, string m)() {
 
 pure string[] getAllIds(C, bool first = true, string prefix="")() {
 	string[] ret;
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
@@ -118,7 +118,7 @@ pure string[] getAllIds(C, bool first = true, string prefix="")() {
 
 pure string[] getAllIdNames(C, bool first = true, string prefix="")() {
 	string[] ret;
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
@@ -137,7 +137,7 @@ pure string[] getAllIdNames(C, bool first = true, string prefix="")() {
 
 pure string[] getAllValues(C, bool first = true, string prefix="")() {
 	string[] ret;
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
@@ -154,7 +154,7 @@ pure string[] getAllValues(C, bool first = true, string prefix="")() {
 
 pure string[] getAllValueNames(C, bool first = true, string prefix="")() {
 	string[] ret;
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)()) {
@@ -170,7 +170,7 @@ pure string[] getAllValueNames(C, bool first = true, string prefix="")() {
 }
 
 pure bool isUsable(C, string m)() {
-	C c = C.init;
+	C c = newValueOfType!C;
 	
 	static if (__traits(compiles, {auto value = typeof(mixin("c." ~ m)).init;})) {
 		static if (!__traits(hasMember, Object, m) &&
@@ -209,7 +209,7 @@ DbType getDbType(C)() {
  */
 
 pure bool isActualRelationship(T, string f)() {
-	T t = new T;
+	T t = newValueOfType!T;
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA)) {
 			static if (UDA2 == "dbIsModel") {
@@ -226,7 +226,7 @@ pure bool isActualRelationship(T, string f)() {
  */
 
 pure string getRelationshipClassName(T, string f)() {
-	T t = new T;
+	T t = newValueOfType!T;
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA))
 			static if (UDA2 == "dbIsModel")
@@ -237,7 +237,7 @@ pure string getRelationshipClassName(T, string f)() {
 }
 
 pure string getRelationshipClassModuleName(T, string f)() {
-	T t = new T;
+	T t = newValueOfType!T;
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA))
 			static if (UDA2 == "dbIsModel")
@@ -252,7 +252,7 @@ pure string getRelationshipClassModuleName(T, string f)() {
  */
 
 string getRelationshipPropertyName(T, string f)() {
-	T t = new T;
+	T t = newValueOfType!T;
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA)) {
 			static if (UDA2 == "dbIsModel") {
@@ -276,4 +276,24 @@ pure string getterName(string m)() {
 pure string setterName(string m)() {
 	static assert(m.length >= 2, "Property name must be more then 1 charactor long");
 	return "set" ~ cast(char)m[0].toUpper() ~ m [1 .. $];
+}
+
+/**
+ * Creates a new instance of a type.
+ * If a class it will be either no args, with params or without or .init'd
+ * If a struct it will be the same.
+ * If a primitive then it'll be .init
+ */
+pure T newValueOfType(T)() {
+	static if (is(T : Object) || is(T == struct)) {
+		static if (__traits(compiles, {T value = new T();})) {
+			return new T();
+		} else static if (__traits(compiles, {T value = new T;})) {
+			return new T;
+		} else {
+			return T.init;
+		}
+	} else {
+		return T.init;
+	}
 }

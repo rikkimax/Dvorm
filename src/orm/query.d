@@ -45,7 +45,7 @@ Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") st
 pure string queryInterface(C)() {
 	string ret;
 	
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m) && !shouldBeIgnored!(C, m)) {
@@ -80,7 +80,7 @@ pure string queryInterface(C)() {
 
 pure string queryGenerator(C)() {
 	string ret;
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	ret ~= "@property static Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\") query() {";
 	ret ~= "return new Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\");";
@@ -102,7 +102,7 @@ pure bool hasType(C, string name, string type)() {
 }
 
 pure string queryIGen(C, string m, string op, string subm="",
-                      C c = new C,
+                      C c = newValueOfType!C,
                       string nameOfFunc = m ~ (subm == "" ? "" : "_" ~ subm) ~ "_" ~ op,
                       string handleName = getNameOfHandle!(C, m, subm)(),
                       string typeValue = typeof(mixin("c." ~ m)).stringof == "string" ? "value" : "to!string(value)",
@@ -118,7 +118,7 @@ Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\")" ~ nameOfFunc ~ "(" ~ v
 }
 
 pure string getNameOfHandle(C, string m, string subm,
-                            C c = new C)() {
+                            C c = newValueOfType!C)() {
 	static if (subm == "") {
 		return getNameValue!(C, m)();
 	} else {
@@ -127,7 +127,7 @@ pure string getNameOfHandle(C, string m, string subm,
 }
 
 pure string getValueOfHandle(C, string m, string subm,
-                             C c = new C)() {
+                             C c = newValueOfType!C)() {
 	static if (subm == "") {
 		return typeof(mixin("c." ~ m)).stringof;
 	} else {

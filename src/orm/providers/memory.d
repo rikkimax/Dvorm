@@ -488,12 +488,10 @@ private {
 						matches = false;
 					}
 				}
-				j++;
 			}
 			if (matches) {
 				ret ~= i;
 			}
-			i++;
 		}
 		return ret;
 	}

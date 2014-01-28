@@ -61,7 +61,7 @@ pure string objectBuilderCreator(C, string name = "objectBuilder")() {
 	ret ~= "Object " ~ name ~ "(string[string] values) {\n";
 	ret ~= "    import " ~ moduleName!C ~ ";\n";
 	ret ~= "    import std.conv : to;\n";
-	ret ~= "    " ~ C.stringof ~ " ret = new " ~ C.stringof ~ ";\n";
+	ret ~= "    " ~ C.stringof ~ " ret = newValueOfType!" ~ C.stringof ~ ";\n";
 	ret ~= "    string keyValueOfName;";
 	
 	foreach(m; __traits(allMembers, C)) {

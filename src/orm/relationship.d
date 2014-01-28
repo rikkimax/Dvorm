@@ -3,7 +3,7 @@ import dvorm;
 
 string relationshipGenerator(C)() {
 	string ret;
-	C c = new C;
+	C c = newValueOfType!C;
 	
 	foreach(m; __traits(allMembers, C)) {
 		static if (isUsable!(C, m)() && !shouldBeIgnored!(C, m)()) {

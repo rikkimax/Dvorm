@@ -8,12 +8,12 @@ version(unittest) {
 		
 		assert(getDbType!Book() == cons[0].type);
 		
-		Book book = new Book;
+		Book book = newValueOfType!Book;
 		book.isbn = "978-0-300-14424-6";
 		book.edition = 5;
 		book.save();
 		
-		Book book2 = new Book;
+		Book book2 = newValueOfType!Book;
 		book2.isbn = "978-0-300-14424-7";
 		book2.edition = 15;
 		book2.save();

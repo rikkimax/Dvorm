@@ -26,12 +26,12 @@ string remove(C)() {
 					hasId = true;
 				}
 			}
-
+			
 			if (hasId) {
 				static if (is(typeof(mixin("c." ~ m)) : Object)) {
 					//assert(0, "Have yet to enable saving of objects");
 					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
-					mixin(typeof(mixin("c." ~ m)).stringof ~ " d = new " ~ typeof(mixin("c." ~ m)).stringof ~ ";");
+					mixin(typeof(mixin("c." ~ m)).stringof ~ " d = newValueOfType!" ~ typeof(mixin("c." ~ m)).stringof ~ ";");
 					foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
 						static if (isUsable!(typeof(d), n)()) {
 							foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {

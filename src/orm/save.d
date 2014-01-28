@@ -30,7 +30,7 @@ string save(C)() {
 			static if (is(typeof(mixin("c." ~ m)) : Object)) {
 				//assert(0, "Have yet to enable saving of objects");
 				mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
-				mixin("auto d = new typeof(c." ~ m ~ ");");
+				mixin("auto d = newValueOfType!(typeof(c." ~ m ~ "));");
 				foreach(n; __traits(allMembers, mixin("typeof(d)"))) {
 					static if (isUsable!(typeof(d), n)() && !shouldBeIgnored!(typeof(d), n)()) {
 						foreach(UDA; __traits(getAttributes, mixin("d." ~ n))) {
