@@ -13,6 +13,8 @@ With Vibe:
 
 Usage
 --------
+Data types in terms of classes and structs should be interchable. The struct side of things has not really been tested yet however.
+
 Utilising UDA's meta information can be applied to models in the form of classes and properties.
 Methods are ignored all together.
 Default values can be given for a property to allow find* methods not require all values.
