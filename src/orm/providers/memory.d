@@ -3,10 +3,11 @@ import dvorm.provider;
 import dvorm.unittests;
 import std.string;
 import std.conv;
+import std.math : isNaN;
 
 private {
 	shared TableData[string] tableData;
-
+	
 	struct TableData {
 		string[string][] value;
 	}
@@ -182,11 +183,11 @@ class MemoryProvider : Provider {
 								case "like":
 									if (isFloat) {
 										try {
-											if (!(to!float(op.value) <> f)) stillOk = false;
-									    } catch (Exception e) {stillOk = false;}
+											if (!(to!float(op.value) != f)) stillOk = false;
+										} catch (Exception e) {stillOk = false;}
 									} else if (isLong) {
-									    try {
-										if (!(to!long(op.value) <> l)) stillOk = false;
+										try {
+											if (!(to!long(op.value) != l)) stillOk = false;
 										} catch (Exception e) {stillOk = false;}
 									} else {
 										ptrdiff_t loc = v.indexOf(op.value, CaseSensitive.no);
@@ -308,11 +309,11 @@ class MemoryProvider : Provider {
 								case "like":
 									if (isFloat) {
 										try {
-											if (!(to!float(op.value) <> f)) stillOk = false;
+											if (!(to!float(op.value) != f)) stillOk = false;
 										} catch (Exception e) {stillOk = false;}
 									} else if (isLong) {
 										try {
-											if (!(to!long(op.value) <> l)) stillOk = false;
+											if (!(to!long(op.value) != l)) stillOk = false;
 										} catch (Exception e) {stillOk = false;}
 									} else {
 										ptrdiff_t loc = v.indexOf(op.value, CaseSensitive.no);
@@ -415,11 +416,11 @@ class MemoryProvider : Provider {
 								case "like":
 									if (isFloat) {
 										try {
-											if (!(to!float(op.value) <> f)) stillOk = false;
+											if (!(to!float(op.value) != f)) stillOk = false;
 										} catch (Exception e) {stillOk = false;}
 									} else if (isLong) {
 										try {
-											if (!(to!long(op.value) <> l)) stillOk = false;
+											if (!(to!long(op.value) != l)) stillOk = false;
 										} catch (Exception e) {stillOk = false;}
 									} else {
 										ptrdiff_t loc = v.indexOf(op.value, CaseSensitive.no);
