@@ -122,8 +122,8 @@ Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\") " ~ nameOfFunc ~ "(" ~ 
 """;
 }
 
-pure string getNameOfHandle(C, string m, string subm,
-                            C c = newValueOfType!C)() {
+pure string getNameOfHandle(C, string m, string subm)() {
+	C c = newValueOfType!C;
 	static if (subm == "") {
 		return getNameValue!(C, m)();
 	} else {
@@ -131,8 +131,8 @@ pure string getNameOfHandle(C, string m, string subm,
 	}
 }
 
-pure string getValueOfHandle(C, string m, string subm,
-                             C c = newValueOfType!C)() {
+pure string getValueOfHandle(C, string m, string subm)() {
+	C c = newValueOfType!C;
 	static if (subm == "") {
 		return typeof(mixin("c." ~ m)).stringof;
 	} else {

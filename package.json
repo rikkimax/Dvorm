@@ -31,6 +31,15 @@
 				"dvorm:vibeproviders": "~master"
 			},
 			"sourceFiles": ["src/main.d"]
+		},
+		{	
+			"name": "email",
+			"sourcePaths": ["src/email"],
+			"dependencies": {
+				"dvorm:orm": "~master",
+				"vibe-d": "~master"
+			},
+			"versions": ["VibeCustomMain"]
 		}
 	]
 }

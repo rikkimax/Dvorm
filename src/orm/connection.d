@@ -58,9 +58,10 @@ struct DbConnection {
 
 enum DbType : string {
 	Memory = "Memory",
-	Mongo = "Mongo"/*,
-	                Redis = "Redis",
-	                Mysql = "Mysql",
-	                Postgresql = "Postgresql",
-	                Sqlite = "Sqlite"*/
+	Mongo = "Mongo",
+	Email = "Email",/*,
+	                 Redis = "Redis",
+	                 Mysql = "Mysql",
+	                 Postgresql = "Postgresql",
+	                 Sqlite = "Sqlite"*/
 }
