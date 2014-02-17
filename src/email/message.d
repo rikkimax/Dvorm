@@ -7,6 +7,8 @@ class EmailMessage {
 	@dbId {
 		EmailAddress from;
 		EmailAddress target;
+		
+		@dbDefaultValue("0")
 		ulong transversed;
 	}
 	
@@ -22,7 +24,7 @@ shared static this() {
 }
 
 struct EmailAddress {
-	@dbId {
+	@dbId @dbDefaultValue("\"\"") {
 		string user;
 		string domain;
 		string name;
@@ -55,8 +57,14 @@ import dvorm.email.config;
 
 void main() {
 	setReceive(ReceiveClientType.Pop3, ReceiveClientConfig.securePop3("192.168.178.3", "test@alphaglosined.tk", "immatest"));
+	
 	foreach(email; EmailMessage.findAll()) {
 		import std.file;
 		append("out2.txt", email.from.toString() ~ ": " ~ email.subject ~ "\n");
+	}
+	
+	foreach(email; EmailMessage.find(null, "gmail.com")) {
+		import std.file;
+		append("out3.txt", email.from.toString() ~ ": " ~ email.subject ~ "\n");
 	}
 }
