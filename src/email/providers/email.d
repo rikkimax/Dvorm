@@ -127,7 +127,47 @@ class EmailProvider : Provider {
 		getData(builder, null, &handler);
 	}
 	
-	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection){}
+	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
+		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		switch(sendType) {
+			case SendClientType.SMTP:
+				string[string] values;
+				foreach(i, v; valueNames) {
+					values[v] = valueArray[i];
+				}
+				
+				EmailMessage email = *cast(EmailMessage*)builder(values);
+				if (email.from.user == "" || email.from.domain == "") {
+					email.from = sendConfig.defaultEmailTo;
+				}
+				assert(email.from.user != "" && email.from.domain != "", "Must specify who you're sending from (account)");
+				
+				auto settings = new SMTPClientSettings(sendConfig.host, sendConfig.port);
+				
+				if ((receiveConfig.security & ClientSecurity.StartTLS) == ClientSecurity.StartTLS ||
+				    (receiveConfig.security & ClientSecurity.SSL) == ClientSecurity.SSL) {
+					settings.connectionType = SMTPConnectionType.startTLS;
+				} else {
+					settings.connectionType = SMTPConnectionType.plain;
+				}
+				
+				settings.authType = SMTPAuthType.plain;
+				settings.username = sendConfig.user;
+				settings.password = sendConfig.password;
+				
+				auto mail = new Mail;
+				mail.headers["From"] = email.from.toString();
+				mail.headers["To"] = email.target.toString();
+				mail.headers["Content-Type"] = email.contentType;
+				mail.headers["Subject"] = email.subject;
+				mail.bodyText = email.message;
+				
+				sendMail(settings, mail);
+				break;
+			default:
+				break;
+		}
+	}
 	
 	override string[] handleQueryOp(string op, string prop, string value, string[] store) {
 		return store ~ [op ~ ":" ~ prop ~ ":" ~ value];
@@ -155,7 +195,6 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 		case ReceiveClientType.Pop3:
 			TCPConnection raw_conn;
 			try {
-				raw_conn = connectTCP(receiveConfig.host, receiveConfig.port);
 			} catch(Exception e){
 				throw new Exception("Failed to connect to POP3 server at "~receiveConfig.host~" port "
 				                    ~to!string(receiveConfig.port), e);
