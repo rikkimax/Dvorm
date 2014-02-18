@@ -10,6 +10,7 @@ Default:
 
 With Vibe:
 - Mongo
+- Pop3/SMTP client with dedicated data model.
 
 Usage
 --------
