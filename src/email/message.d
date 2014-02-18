@@ -67,4 +67,17 @@ void main() {
 		import std.file;
 		append("out3.txt", email.from.toString() ~ ": " ~ email.subject ~ "\n");
 	}
+	
+	foreach(email; EmailMessage.findAll()) {
+		import std.string : toLower;
+		if (email.from.domain.toLower() == "host.alphaglosined.tk") {
+			email.remove();
+			break;
+		}
+	}
+	
+	foreach(email; EmailMessage.findAll()) {
+		import std.file;
+		append("out4.txt", email.from.toString() ~ ": " ~ email.subject ~ "\n");
+	}
 }

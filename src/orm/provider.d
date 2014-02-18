@@ -33,12 +33,12 @@ abstract class Provider {
 			return *cast(C*)value;
 	}
 	
-	void remove(C)(string[] idNames, string[] valueNames, string[] valueArray) {
-		remove(getTableName!C(), idNames, valueNames, valueArray, C.databaseConnection());
+	void remove(C)(string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder) {
+		remove(getTableName!C(), idNames, valueNames, valueArray, builder, C.databaseConnection());
 	}
 	
-	void removeAll(C)() {
-		removeAll(getTableName!C(), C.databaseConnection());
+	void removeAll(C)(ObjectBuilder builder) {
+		removeAll(getTableName!C(), builder, C.databaseConnection());
 	}
 	
 	void save(C)(string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder) {
@@ -48,8 +48,8 @@ abstract class Provider {
 	void*[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
 	void*[] findAll(string table, ObjectBuilder builder, DbConnection[] connection);
 	void* findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
-	void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection);
-	void removeAll(string table, DbConnection[] connection);
+	void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection);
+	void removeAll(string table, ObjectBuilder builder, DbConnection[] connection);
 	void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection);
 	
 	string[] handleQueryOp(string op, string prop, string value, string[] store);

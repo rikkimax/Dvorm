@@ -85,7 +85,7 @@ class MongoProvider : Provider {
 		return builder(create);
 	}
 	
-	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection) {
+	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
 		checkConnection(table, connection);
 		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
 		Bson[string] query;
@@ -103,7 +103,7 @@ class MongoProvider : Provider {
 		col.remove(Bson(query));
 	}
 	
-	override void removeAll(string table, DbConnection[] connection) {
+	override void removeAll(string table, ObjectBuilder builder, DbConnection[] connection) {
 		checkConnection(table, connection);
 		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
 		

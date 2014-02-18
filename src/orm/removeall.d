@@ -7,7 +7,8 @@ string removeAll(C)() {
 	ret ~= "void removeAll() {";
 	
 	// database dependent find part
-	ret ~= "    provider(getDbType!" ~ C.stringof ~ ").removeAll!" ~ C.stringof ~ "();";
+	ret ~=  objectBuilderCreator!C();
+	ret ~= "    provider(getDbType!" ~ C.stringof ~ ").removeAll!" ~ C.stringof ~ "(&objectBuilder);";
 	
 	ret ~= "}";
 	

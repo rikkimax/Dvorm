@@ -71,9 +71,62 @@ class EmailProvider : Provider {
 		}
 	}
 	
+	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
+		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		
+		bool handler(EmailMessage message) {
+			foreach(i, a; valueNames) {
+				string value = valueArray[i];
+				if (value == "") continue;
+				
+				switch(a) {
+					case "from_user":
+						if (message.from.user != value) return false;
+						break;
+					case "from_domain":
+						if (message.from.domain != value) return false;
+						break;
+					case "from_name":
+						if (message.from.name != value) return false;
+						break;
+						
+					case "target_user":
+						if (message.target.user != value) return false;
+						break;
+					case "target_domain":
+						if (message.target.domain != value) return false;
+						break;
+					case "target_name":
+						if (message.target.name != value) return false;
+						break;
+						
+					case "transversed":
+						if (value == "0") continue;
+						
+						if (message.transversed != to!ulong(value)) return false;
+						break;
+						
+					default:
+						break;
+				}
+			}
+			
+			return true;
+		}
+		
+		getData(builder, null, &handler);
+	}
 	
-	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection){}
-	override void removeAll(string table, DbConnection[] connection){}
+	override void removeAll(string table, ObjectBuilder builder, DbConnection[] connection) {
+		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		
+		bool handler(EmailMessage message) {
+			return true;
+		}
+		
+		getData(builder, null, &handler);
+	}
+	
 	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection){}
 	
 	override string[] handleQueryOp(string op, string prop, string value, string[] store){return null;}
@@ -82,7 +135,7 @@ class EmailProvider : Provider {
 	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection){}
 }
 
-void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handler = null) {
+void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handler = null, bool delegate(EmailMessage message) removeHandler = null) {
 	switch(receiveType) {
 		case ReceiveClientType.Pop3:
 			TCPConnection raw_conn;
@@ -126,6 +179,16 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 			got = cast(string)conn.readLine();
 			debug {
 				append("out.txt", "pass: " ~ got ~ "\n");
+			}
+			
+			if (got.length > 3) {
+				if (got[0 .. 3] == "+OK") {
+					// continue
+				} else {
+					assert(0, "Could not login to pop3 server");
+				}
+			} else {
+				assert(0, "Could not login to pop3 server");
 			}
 			
 			conn.write("LIST \r\n");
@@ -249,6 +312,16 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 						ret ~= tempObj;
 				} else
 					ret ~= tempObj;
+				
+				if (removeHandler !is null) {
+					if (removeHandler(*tempObj)) {
+						conn.write("DELE " ~ id ~ "\r\n");
+						got = cast(string)conn.readLine();
+						debug {
+							append("out5.txt", "dele: " ~ got ~ "\n");
+						}
+					}
+				}
 				
 				debug {
 					append("out.txt", "parsed " ~ id ~ ": " ~ from ~ "\n");

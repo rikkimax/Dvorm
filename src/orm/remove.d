@@ -77,7 +77,8 @@ string remove(C)() {
 	ret ~= valueArray ~ "];";
 	
 	// database dependent find part
-	ret ~= "provider(getDbType!" ~ C.stringof ~ ").remove!" ~ C.stringof ~ "(idNames, valueNames, valueArray);";
+	ret ~=  objectBuilderCreator!C();
+	ret ~= "provider(getDbType!" ~ C.stringof ~ ").remove!" ~ C.stringof ~ "(idNames, valueNames, valueArray, &objectBuilder);";
 	
 	ret ~= "}";
 	return ret;

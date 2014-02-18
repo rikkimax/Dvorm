@@ -50,7 +50,7 @@ class MemoryProvider : Provider {
 		return null;
 	}
 	
-	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection) {
+	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
 		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
 		
@@ -67,7 +67,7 @@ class MemoryProvider : Provider {
 		}
 	}
 	
-	override void removeAll(string table, DbConnection[] connection) {
+	override void removeAll(string table, ObjectBuilder builder, DbConnection[] connection) {
 		if (tableData.get(table, TableData.init) !is cast(shared)TableData.init) {
 			tableData.remove(table);
 		}
