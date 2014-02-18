@@ -5,6 +5,7 @@ import dvorm;
 import vibe.d;
 import std.conv : to;
 import std.string : split, toLower, join;
+import std.datetime :  DateTime, dur, SysTime;
 
 class EmailProvider : Provider {
 	override void*[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection){
@@ -37,7 +38,7 @@ class EmailProvider : Provider {
 						break;
 						
 					case "transversed":
-						if (value != "0") continue;
+						if (value == "0") continue;
 						
 						if (message.transversed != to!ulong(value)) return false;
 						break;
@@ -82,7 +83,7 @@ class EmailProvider : Provider {
 }
 
 void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handler = null) {
-	switch(receiveConfig.type) {
+	switch(receiveType) {
 		case ReceiveClientType.Pop3:
 			TCPConnection raw_conn;
 			try {
@@ -239,7 +240,7 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 					build["from_name"] = splitted[0 .. $-1].join(" ");
 				}
 				
-				// TODO convert date to UTC+0 unix time
+				build["transversed"] = to!string(smtpUTC0Time(date));
 				
 				EmailMessage* tempObj = cast(EmailMessage*)builder(build);
 				
@@ -263,4 +264,44 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 		default:
 			return null;
 	}
+}
+
+ulong smtpUTC0Time(string text) {
+	string[] values = text.split(" ");
+	
+	if (values.length >= 6) {
+		int day = to!int(values[1]);
+		int month;
+		int year = to!int(values[3]);
+		int hour;
+		int minute;
+		int second;
+		int hourOffset = to!int(values[5][0 .. 3]);
+		int minuteOffset = to!int(values[5][0] ~ values[5][3 .. $]);
+		
+		string t;
+		string[] t2;
+		
+		t = values[2].toLower();
+		foreach(m; __traits(allMembers, Month)) {
+			if (t == m) {
+				month = cast(int)mixin("Month." ~ m);	
+			}
+		}
+		
+		t2 = values[4].split(":");
+		if (t2.length == 3) {
+			hour = to!int(t2[0]);
+			minute = to!int(t2[1]);
+			second = to!int(t2[2]);
+		}
+		
+		DateTime dt = DateTime(year, month, day, hour, minute, second);
+		dt -= dur!"hours"(hourOffset);
+		dt -= dur!"minutes"(minuteOffset);
+		
+		return new SysTime(dt).toUnixTime();
+	}
+	
+	return 0;
 }
