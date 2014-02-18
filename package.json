@@ -35,6 +35,7 @@
 		},
 		{	
 			"name": "email",
+			"targetType": "library",
 			"sourcePaths": ["src/email"],
 			"dependencies": {
 				"dvorm:orm": "~master",

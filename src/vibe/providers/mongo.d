@@ -215,7 +215,7 @@ class MongoProvider : Provider {
 		return ret;
 	}
 	
-	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection) {
+	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
 		checkConnection(table, connection);
 		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
 		Bson[string] query;
@@ -286,7 +286,7 @@ class MongoProvider : Provider {
 		return ret;
 	}
 	
-	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection) {
+	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
 		checkConnection(table, connection);
 		MongoCollection col = cast(MongoCollection)tableCollections[connection[0].database ~ "." ~ table];
 		Bson[string] query;

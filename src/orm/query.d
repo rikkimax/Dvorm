@@ -25,13 +25,15 @@ class Query(string moduleName, string name) {
 	
 	mixin(q{
 		size_t count() {
-			return provider(getDbType!(mixin(name))).handleQueryCount(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), mixin(name).databaseConnection());
+			mixin(objectBuilderCreator!(mixin(name))());
+			return provider(getDbType!(mixin(name))).handleQueryCount(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, mixin(name).databaseConnection());
 		}
 	});
 	
 	mixin(q{
 		void remove() {
-			provider(getDbType!(mixin(name))).handleQueryRemove(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), mixin(name).databaseConnection());
+			mixin(objectBuilderCreator!(mixin(name))());
+			provider(getDbType!(mixin(name))).handleQueryRemove(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, mixin(name).databaseConnection());
 		}
 	});
 	

@@ -220,7 +220,7 @@ class MemoryProvider : Provider {
 		}
 	}
 	
-	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection) {
+	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
 		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return 0;
@@ -344,7 +344,7 @@ class MemoryProvider : Provider {
 		}
 	}
 	
-	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection) {
+	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
 		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return;

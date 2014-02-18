@@ -129,10 +129,25 @@ class EmailProvider : Provider {
 	
 	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection){}
 	
-	override string[] handleQueryOp(string op, string prop, string value, string[] store){return null;}
-	override void*[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection){return null;}
-	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection){return 0;}
-	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection){}
+	override string[] handleQueryOp(string op, string prop, string value, string[] store) {
+		return store ~ [op ~ ":" ~ prop ~ ":" ~ value];
+	}
+	
+	override void*[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
+		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		
+		return handleQueryHelper(store, builder);
+	}
+	
+	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
+		return *cast(size_t*)handleQueryHelper!(false, true)(store, builder)[0];
+	}
+	
+	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
+		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		
+		handleQueryHelper!(true)(store, builder);
+	}
 }
 
 void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handler = null, bool delegate(EmailMessage message) removeHandler = null) {
@@ -150,37 +165,21 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 			string got;
 			Stream conn = raw_conn;
 			
-			debug {
-				import std.file;
-			}
-			
 			if ((receiveConfig.security & ClientSecurity.StartTLS) == ClientSecurity.StartTLS ||
 			    (receiveConfig.security & ClientSecurity.SSL) == ClientSecurity.SSL) {
 				auto ctx = new SSLContext(SSLContextKind.client);
 				conn = new SSLStream(raw_conn, ctx, SSLStreamState.connecting);
 				
 				got = cast(string)conn.readLine();
-				debug {
-					append("out.txt", "ssl: " ~ got ~ "\n");
-				}
 			}
 			
 			void*[] ret;
 			
 			conn.write("USER " ~ receiveConfig.user ~ "\r\n");
-			
 			got = cast(string)conn.readLine();
-			debug {
-				append("out.txt", "user: " ~ got ~ "\n");
-			}
 			
 			conn.write("PASS " ~ receiveConfig.password ~ "\r\n");
-			
 			got = cast(string)conn.readLine();
-			debug {
-				append("out.txt", "pass: " ~ got ~ "\n");
-			}
-			
 			if (got.length > 3) {
 				if (got[0 .. 3] == "+OK") {
 					// continue
@@ -192,11 +191,7 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 			}
 			
 			conn.write("LIST \r\n");
-			
 			got = cast(string)conn.readLine();
-			debug {
-				append("out.txt", "list: " ~ got ~ "\n");
-			}
 			
 			string[] ids;
 			while((got = cast(string)conn.readLine()) != ".") {
@@ -229,8 +224,6 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 							got = got["\r\n.".length - 1 .. $];
 						}
 					}
-					
-					append("out.txt", "retr " ~ id ~ ": " ~ got ~ "\n");
 					
 					splitted = got.split(" ");
 					if (splitted.length >= 2) {
@@ -317,19 +310,7 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 					if (removeHandler(*tempObj)) {
 						conn.write("DELE " ~ id ~ "\r\n");
 						got = cast(string)conn.readLine();
-						debug {
-							append("out5.txt", "dele: " ~ got ~ "\n");
-						}
 					}
-				}
-				
-				debug {
-					append("out.txt", "parsed " ~ id ~ ": " ~ from ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ target ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ date ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ contentType ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ subject ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ message ~ "\n");
 				}
 			}
 			
@@ -377,4 +358,335 @@ ulong smtpUTC0Time(string text) {
 	}
 	
 	return 0;
+}
+
+struct QOp {
+	string op;
+	string prop;
+	string value;
+}
+
+pure string getQueryOp(string o, string name, bool isLong = false)() {
+	static if (isLong) {
+		return "    try {
+	if ((mixin(\"to!long(op.value) " ~ o ~ " to!long(message." ~ name ~ ")\"))) stillOk = false;
+	} catch (Exception e) {stillOk = false;}\n";
+	} else {
+		return 
+			"	if (!(mixin(\"op.value " ~ o ~ " message." ~ name ~ "\"))) stillOk = false;";
+	}
+}
+
+void*[] handleQueryHelper(bool remove = false, bool count = false)(string[] store, ObjectBuilder builder) {
+	int num_skip = 0, num_docs_per_chunk = 0;
+	QOp[] ops;
+	
+	foreach(s; store) {
+		size_t i = s.indexOf(":");
+		if (i >= 0 && i + 1 < s.length) {
+			string op = s[0 .. i];
+			string prop = s[i + 1.. $];
+			i = prop.indexOf(":");
+			if (i >= 0 && i + 1 < prop.length) {
+				string value = prop[i + 1.. $];
+				prop = prop[0 .. i];
+				
+				ops ~= QOp(op, prop, value);
+			}
+		}
+	}
+	
+	foreach(op; ops) {
+		if (op.prop == "") {
+			switch(op.op) {
+				case "startAt":
+					num_skip = to!int(op.value);
+					break;
+				case "maxAmount":
+					num_docs_per_chunk = to!int(op.value);
+					break;
+					
+				default:
+					break;
+			}
+		}
+	}
+	
+	size_t i;
+	
+	bool handler(EmailMessage message) {
+		bool stillOk = true;
+		
+		foreach(op; ops) {
+			switch(op.prop) {
+				case "from_user":
+					switch(op.op) {
+						case "eq":
+							mixin(getQueryOp!("==", "from.user")());
+							break;
+						case "neq":
+							mixin(getQueryOp!("!=", "from.user")());
+							break;
+							
+						case "lt":
+							mixin(getQueryOp!("<", "from.user")());
+							break;
+						case "lte":
+							mixin(getQueryOp!("<=", "from.user")());
+							break;
+							
+						case "mt":
+							mixin(getQueryOp!(">", "from.user")());
+							break;
+						case "mte":
+							mixin(getQueryOp!(">=", "from.user")());
+							break;
+							
+						case "like":
+							ptrdiff_t loc = message.from.user.indexOf(op.value, CaseSensitive.no);
+							if (!(loc >= 0)) stillOk = false;
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							stillOk = false;
+							break;
+					}
+					break;
+				case "from_domain":
+					switch(op.op) {
+						case "eq":
+							mixin(getQueryOp!("==", "from.domain")());
+							break;
+						case "neq":
+							mixin(getQueryOp!("!=", "from.domain")());
+							break;
+							
+						case "lt":
+							mixin(getQueryOp!("<", "from.domain")());
+							break;
+						case "lte":
+							mixin(getQueryOp!("<=", "from.domain")());
+							break;
+							
+						case "mt":
+							mixin(getQueryOp!(">", "from.domain")());
+							break;
+						case "mte":
+							mixin(getQueryOp!(">=", "from.domain")());
+							break;
+							
+						case "like":
+							ptrdiff_t loc = message.from.domain.indexOf(op.value, CaseSensitive.no);
+							if (!(loc >= 0)) stillOk = false;
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							stillOk = false;
+							break;
+					}
+					break;
+				case "from_name":
+					switch(op.op) {
+						case "eq":
+							mixin(getQueryOp!("==", "from.name")());
+							break;
+						case "neq":
+							mixin(getQueryOp!("!=", "from.name")());
+							break;
+							
+						case "lt":
+							mixin(getQueryOp!("<", "from.name")());
+							break;
+						case "lte":
+							mixin(getQueryOp!("<=", "from.name")());
+							break;
+							
+						case "mt":
+							mixin(getQueryOp!(">", "from.name")());
+							break;
+						case "mte":
+							mixin(getQueryOp!(">=", "from.name")());
+							break;
+							
+						case "like":
+							ptrdiff_t loc = message.from.name.indexOf(op.value, CaseSensitive.no);
+							if (!(loc >= 0)) stillOk = false;
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							stillOk = false;
+							break;
+					}
+					break;
+					
+				case "target_user":
+					switch(op.op) {
+						case "eq":
+							mixin(getQueryOp!("==", "target.user")());
+							break;
+						case "neq":
+							mixin(getQueryOp!("!=", "target.user")());
+							break;
+							
+						case "lt":
+							mixin(getQueryOp!("<", "target.user")());
+							break;
+						case "lte":
+							mixin(getQueryOp!("<=", "target.user")());
+							break;
+							
+						case "mt":
+							mixin(getQueryOp!(">", "target.user")());
+							break;
+						case "mte":
+							mixin(getQueryOp!(">=", "target.user")());
+							break;
+							
+						case "like":
+							ptrdiff_t loc = message.from.user.indexOf(op.value, CaseSensitive.no);
+							if (!(loc >= 0)) stillOk = false;
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							stillOk = false;
+							break;
+					}
+					break;
+				case "target_domain":
+					switch(op.op) {
+						case "eq":
+							mixin(getQueryOp!("==", "target.domain")());
+							break;
+						case "neq":
+							mixin(getQueryOp!("!=", "target.domain")());
+							break;
+							
+						case "lt":
+							mixin(getQueryOp!("<", "target.domain")());
+							break;
+						case "lte":
+							mixin(getQueryOp!("<=", "target.domain")());
+							break;
+							
+						case "mt":
+							mixin(getQueryOp!(">", "target.domain")());
+							break;
+						case "mte":
+							mixin(getQueryOp!(">=", "target.domain")());
+							break;
+							
+						case "like":
+							ptrdiff_t loc = message.from.domain.indexOf(op.value, CaseSensitive.no);
+							if (!(loc >= 0)) stillOk = false;
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							stillOk = false;
+							break;
+					}
+					break;
+				case "target_name":
+					switch(op.op) {
+						case "eq":
+							mixin(getQueryOp!("==", "target.name")());
+							break;
+						case "neq":
+							mixin(getQueryOp!("!=", "target.name")());
+							break;
+							
+						case "lt":
+							mixin(getQueryOp!("<", "target.name")());
+							break;
+						case "lte":
+							mixin(getQueryOp!("<=", "target.name")());
+							break;
+							
+						case "mt":
+							mixin(getQueryOp!(">", "target.name")());
+							break;
+						case "mte":
+							mixin(getQueryOp!(">=", "target.name")());
+							break;
+							
+						case "like":
+							ptrdiff_t loc = message.from.name.indexOf(op.value, CaseSensitive.no);
+							if (!(loc >= 0)) stillOk = false;
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							stillOk = false;
+							break;
+					}
+					break;
+					
+				case "transversed":
+					switch(op.op) {
+						case "eq":
+							mixin(getQueryOp!("==", "transversed", true)());
+							break;
+						case "neq":
+							mixin(getQueryOp!("!=", "transversed", true)());
+							break;
+							
+						case "lt":
+							mixin(getQueryOp!("<", "transversed", true)());
+							break;
+						case "lte":
+							mixin(getQueryOp!("<=", "transversed", true)());
+							break;
+							
+						case "mt":
+							mixin(getQueryOp!(">", "transversed", true)());
+							break;
+						case "mte":
+							mixin(getQueryOp!(">=", "transversed", true)());
+							break;
+							
+						case "like":
+							if (!(to!long(op.value) != message.transversed)) stillOk = false;
+							break;
+							
+						case "startAt":
+						case "maxAmount":
+						default:
+							stillOk = false;
+							break;
+					}
+					break;
+					
+				default:
+					break;
+			}
+		}
+		
+		if (stillOk) {
+			i++;
+			if ((i > num_skip || num_skip == 0) && (i < num_skip + num_docs_per_chunk || num_docs_per_chunk == 0))
+				return true;
+		}
+		
+		return false;
+	}
+	
+	static if (remove) {
+		getData(builder, null, &handler);
+		return null;
+	} else static if (count) {
+		getData(builder, &handler);
+		return [[i].ptr];
+	} else {
+		return getData(builder, &handler);
+	}
 }
