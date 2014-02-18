@@ -59,9 +59,18 @@ class EmailProvider : Provider {
 		return getData(builder);
 	}
 	
+	override void* findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection){
+		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		
+		void*[] data = getData(builder);
+		if (data.length >= 1) {
+			return data[0];
+		} else {
+			return null;
+		}
+	}
 	
 	
-	override void* findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection){return null;}
 	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, DbConnection[] connection){}
 	override void removeAll(string table, DbConnection[] connection){}
 	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection){}
@@ -72,188 +81,192 @@ class EmailProvider : Provider {
 	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, DbConnection[] connection){}
 }
 
-void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handler = null) {	
-	TCPConnection raw_conn;
-	try {
-		raw_conn = connectTCP(receiveConfig.host, receiveConfig.port);
-	} catch(Exception e){
-		throw new Exception("Failed to connect to POP3 server at "~receiveConfig.host~" port "
-		                    ~to!string(receiveConfig.port), e);
-	}
-	scope(exit) raw_conn.close();
-	
-	string got;
-	Stream conn = raw_conn;
-	
-	debug {
-		import std.file;
-	}
-	
-	if ((receiveConfig.security & ClientSecurity.StartTLS) == ClientSecurity.StartTLS ||
-	    (receiveConfig.security & ClientSecurity.SSL) == ClientSecurity.SSL) {
-		auto ctx = new SSLContext(SSLContextKind.client);
-		conn = new SSLStream(raw_conn, ctx, SSLStreamState.connecting);
-		
-		got = cast(string)conn.readLine();
-		debug {
-			append("out.txt", "ssl: " ~ got ~ "\n");
-		}
-	}
-	
-	void*[] ret;
-	
-	switch(receiveType) {
+void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handler = null) {
+	switch(receiveConfig.type) {
 		case ReceiveClientType.Pop3:
-			conn.write("USER " ~ receiveConfig.user ~ "\r\n");
+			TCPConnection raw_conn;
+			try {
+				raw_conn = connectTCP(receiveConfig.host, receiveConfig.port);
+			} catch(Exception e){
+				throw new Exception("Failed to connect to POP3 server at "~receiveConfig.host~" port "
+				                    ~to!string(receiveConfig.port), e);
+			}
+			scope(exit) raw_conn.close();
 			
-			got = cast(string)conn.readLine();
+			string got;
+			Stream conn = raw_conn;
+			
 			debug {
-				append("out.txt", "user: " ~ got ~ "\n");
+				import std.file;
 			}
 			
-			conn.write("PASS " ~ receiveConfig.password ~ "\r\n");
-			
-			got = cast(string)conn.readLine();
-			debug {
-				append("out.txt", "pass: " ~ got ~ "\n");
-			}
-			
-			conn.write("LIST \r\n");
-			
-			got = cast(string)conn.readLine();
-			debug {
-				append("out.txt", "list: " ~ got ~ "\n");
-			}
-			
-			string[] ids;
-			while((got = cast(string)conn.readLine()) != ".") {
-				string[] splitted = got.split(" ");
-				if (splitted.length == 2) {
-					ids ~= splitted[0];
+			if ((receiveConfig.security & ClientSecurity.StartTLS) == ClientSecurity.StartTLS ||
+			    (receiveConfig.security & ClientSecurity.SSL) == ClientSecurity.SSL) {
+				auto ctx = new SSLContext(SSLContextKind.client);
+				conn = new SSLStream(raw_conn, ctx, SSLStreamState.connecting);
+				
+				got = cast(string)conn.readLine();
+				debug {
+					append("out.txt", "ssl: " ~ got ~ "\n");
 				}
 			}
 			
-			foreach(id; ids) {					
-				string from;
-				string target;
-				string date;
-				string contentType;
-				string subject;
-				string message;
-				
-				string boundry;
-				bool hitEndOfHeaders = false;
-				bool useBoundry = false;
-				bool hitBoundry = false;
-				
-				string[] splitted;
-				
-				conn.write("RETR " ~ id ~ "\r\n");
-				while((got = cast(string)conn.readLine()) != ".") {
+			void*[] ret;
+			
+			switch(receiveType) {
+				case ReceiveClientType.Pop3:
+					conn.write("USER " ~ receiveConfig.user ~ "\r\n");
 					
-					if (got.length > "\r\n.".length) {
-						if (got[0 .. "\r\n.".length] == "\r\n.") {
-							got = got["\r\n.".length - 1 .. $];
+					got = cast(string)conn.readLine();
+					debug {
+						append("out.txt", "user: " ~ got ~ "\n");
+					}
+					
+					conn.write("PASS " ~ receiveConfig.password ~ "\r\n");
+					
+					got = cast(string)conn.readLine();
+					debug {
+						append("out.txt", "pass: " ~ got ~ "\n");
+					}
+					
+					conn.write("LIST \r\n");
+					
+					got = cast(string)conn.readLine();
+					debug {
+						append("out.txt", "list: " ~ got ~ "\n");
+					}
+					
+					string[] ids;
+					while((got = cast(string)conn.readLine()) != ".") {
+						string[] splitted = got.split(" ");
+						if (splitted.length == 2) {
+							ids ~= splitted[0];
 						}
 					}
 					
-					append("out.txt", "retr " ~ id ~ ": " ~ got ~ "\n");
-					
-					splitted = got.split(" ");
-					if (splitted.length >= 2) {
-						switch(splitted[0].toLower()) {
-							case "from:":
-								from = got["from: ".length .. $];
-								break;
-							case "to:":
-								target = splitted[1];
-								break;
-							case "subject:":
-								subject = got["subject: ".length .. $];
-								break;
-							case "date:":
-								date = got["date: ".length .. $];
-								break;
-							case "content-type:":
-								contentType = splitted[1];
-								break;
-							default:
-								break;
-						}
-					}
-					
-					if (contentType.length > "multipart/mixed; boundary=".length) {
-						if (contentType[0 .. "multipart/mixed; boundary=".length] == "multipart/mixed; boundary=\"") {
-							boundry = contentType["multipart/mixed; boundary=".length + 1 .. $-1];
-						} else if (contentType[0 .. "multipart/mixed; boundary=".length] == "multipart/mixed; boundary=") {
-							boundry = contentType["multipart/mixed; boundary=".length .. $];
-						}
-					}
-					
-					if (hitBoundry) {
-						message ~= got ~ "\n";
-					}
-					
-					if (hitEndOfHeaders) {
-						if (useBoundry) {
-							if (!hitBoundry && got == "--" ~ boundry) {
-								hitBoundry = true;
-							} else if (hitBoundry && got == "--" ~ boundry ~ "--") {
-								hitBoundry = false;
+					foreach(id; ids) {					
+						string from;
+						string target;
+						string date;
+						string contentType;
+						string subject;
+						string message;
+						
+						string boundry;
+						bool hitEndOfHeaders = false;
+						bool useBoundry = false;
+						bool hitBoundry = false;
+						
+						string[] splitted;
+						
+						conn.write("RETR " ~ id ~ "\r\n");
+						while((got = cast(string)conn.readLine()) != ".") {
+							
+							if (got.length > "\r\n.".length) {
+								if (got[0 .. "\r\n.".length] == "\r\n.") {
+									got = got["\r\n.".length - 1 .. $];
+								}
 							}
-						} else {
-							hitBoundry = true;
+							
+							append("out.txt", "retr " ~ id ~ ": " ~ got ~ "\n");
+							
+							splitted = got.split(" ");
+							if (splitted.length >= 2) {
+								switch(splitted[0].toLower()) {
+									case "from:":
+										from = got["from: ".length .. $];
+										break;
+									case "to:":
+										target = splitted[1];
+										break;
+									case "subject:":
+										subject = got["subject: ".length .. $];
+										break;
+									case "date:":
+										date = got["date: ".length .. $];
+										break;
+									case "content-type:":
+										contentType = splitted[1];
+										break;
+									default:
+										break;
+								}
+							}
+							
+							if (contentType.length > "multipart/mixed; boundary=".length) {
+								if (contentType[0 .. "multipart/mixed; boundary=".length] == "multipart/mixed; boundary=\"") {
+									boundry = contentType["multipart/mixed; boundary=".length + 1 .. $-1];
+								} else if (contentType[0 .. "multipart/mixed; boundary=".length] == "multipart/mixed; boundary=") {
+									boundry = contentType["multipart/mixed; boundary=".length .. $];
+								}
+							}
+							
+							if (hitBoundry) {
+								message ~= got ~ "\n";
+							}
+							
+							if (hitEndOfHeaders) {
+								if (useBoundry) {
+									if (!hitBoundry && got == "--" ~ boundry) {
+										hitBoundry = true;
+									} else if (hitBoundry && got == "--" ~ boundry ~ "--") {
+										hitBoundry = false;
+									}
+								} else {
+									hitBoundry = true;
+								}
+								
+								if (boundry != "") {
+									useBoundry = true;
+								}
+							}
+							
+							if (got == "")
+								hitEndOfHeaders = true;
 						}
 						
-						if (boundry != "") {
-							useBoundry = true;
+						string[string] build = ["target" : target, "contentType": contentType, "subject": subject, "message": message];
+						splitted = from.split(" ");
+						if (splitted.length == 1) {
+							string[] splitted2 = from.split("@");
+							if (splitted2.length == 2) {
+								build["from_user"] = splitted2[0];
+								build["from_domain"] = splitted2[1];
+							}
+						} else if (splitted[$-1][0] == '<' && splitted[$-1][$-1] == '>') {
+							string text = splitted[$-1][1 .. $-1];
+							string[] splitted2 = splitted[$-1].split("@");
+							build["from_user"] = splitted2[0][1 .. $];
+							build["from_domain"] = splitted2[1][0 .. $-1];
+							build["from_name"] = splitted[0 .. $-1].join(" ");
+						}
+						
+						// TODO convert date to UTC+0 unix time
+						
+						EmailMessage* tempObj = cast(EmailMessage*)builder(build);
+						
+						if (handler !is null) {
+							if (handler(*tempObj))
+								ret ~= tempObj;
+						} else
+							ret ~= tempObj;
+						
+						debug {
+							append("out.txt", "parsed " ~ id ~ ": " ~ from ~ "\n");
+							append("out.txt", "parsed " ~ id ~ ": " ~ target ~ "\n");
+							append("out.txt", "parsed " ~ id ~ ": " ~ date ~ "\n");
+							append("out.txt", "parsed " ~ id ~ ": " ~ contentType ~ "\n");
+							append("out.txt", "parsed " ~ id ~ ": " ~ subject ~ "\n");
+							append("out.txt", "parsed " ~ id ~ ": " ~ message ~ "\n");
 						}
 					}
 					
-					if (got == "")
-						hitEndOfHeaders = true;
-				}
-				
-				string[string] build = ["target" : target, "contentType": contentType, "subject": subject, "message": message];
-				splitted = from.split(" ");
-				if (splitted.length == 1) {
-					string[] splitted2 = from.split("@");
-					if (splitted2.length == 2) {
-						build["from_user"] = splitted2[0];
-						build["from_domain"] = splitted2[1];
-					}
-				} else if (splitted[$-1][0] == '<' && splitted[$-1][$-1] == '>') {
-					string text = splitted[$-1][1 .. $-1];
-					string[] splitted2 = splitted[$-1].split("@");
-					build["from_user"] = splitted2[0][1 .. $];
-					build["from_domain"] = splitted2[1][0 .. $-1];
-					build["from_name"] = splitted[0 .. $-1].join(" ");
-				}
-				
-				// TODO convert date to UTC+0 unix time
-				
-				EmailMessage* tempObj = cast(EmailMessage*)builder(build);
-				
-				if (handler !is null) {
-					if (handler(*tempObj))
-						ret ~= tempObj;
-				} else
-					ret ~= tempObj;
-				
-				debug {
-					append("out.txt", "parsed " ~ id ~ ": " ~ from ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ target ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ date ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ contentType ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ subject ~ "\n");
-					append("out.txt", "parsed " ~ id ~ ": " ~ message ~ "\n");
-				}
+					break;
+				default:
+					break;
 			}
-			
-			break;
+			return ret;
 		default:
-			break;
+			return null;
 	}
-	
-	return ret;
 }
