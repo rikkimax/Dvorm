@@ -13,7 +13,7 @@
 		{
 			"name": "orm",
 			"targetType": "library",
-			"sourcePaths": ["src/orm"]
+			"sourcePaths": ["src/dvorm"]
 		},
 		{	
 			"name": "vibeproviders",
