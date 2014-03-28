@@ -13,12 +13,14 @@
 		{
 			"name": "orm",
 			"targetType": "library",
-			"sourcePaths": ["src/dvorm"]
+			"sourcePaths": ["src/base/dvorm"],
+			"importPaths": ["src/base"]
 		},
 		{	
 			"name": "vibeproviders",
 			"targetType": "library",
-			"sourcePaths": ["src/vibe"],
+			"sourcePaths": ["src/vibeproviders/dvorm"],
+			"importPaths": ["src/vibeproviders"],
 			"dependencies": {
 				"dvorm:orm": "~master",
 				"vibe-d": "~master"
@@ -36,7 +38,8 @@
 		{	
 			"name": "email",
 			"targetType": "library",
-			"sourcePaths": ["src/email"],
+			"sourcePaths": ["src/email/dvorm"],
+			"importPaths": ["src/email"],
 			"dependencies": {
 				"dvorm:orm": "~master",
 				"vibe-d": "~master"
