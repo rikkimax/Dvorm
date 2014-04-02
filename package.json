@@ -24,8 +24,7 @@
 			"dependencies": {
 				"dvorm:orm": "~master",
 				"vibe-d": "~master"
-			},
-			"versions": ["VibeCustomMain"]
+			}
 		},
 		{
 			"name": "test",
@@ -43,8 +42,16 @@
 			"dependencies": {
 				"dvorm:orm": "~master",
 				"vibe-d": "~master"
-			},
+			}
+		}
+	],
+	"configurations": [
+		{
+			"name": "default",
 			"versions": ["VibeCustomMain"]
+		},
+		{
+			"name": "forvibe"
 		}
 	]
 }
