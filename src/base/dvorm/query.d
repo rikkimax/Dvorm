@@ -19,21 +19,21 @@ class Query(string moduleName, string name) {
 					getAllIdNames!(mixin(name))(),
 					getAllValueNames!(mixin(name))(),
 					&objectBuilder,
-					mixin(name).databaseConnection()));
+					getDbConnectionInfo!(mixin(name))));
 			});
 		}});
 	
 	mixin(q{
 		size_t count() {
 			mixin(objectBuilderCreator!(mixin(name))());
-			return provider(getDbType!(mixin(name))).handleQueryCount(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, mixin(name).databaseConnection());
+			return provider(getDbType!(mixin(name))).handleQueryCount(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, getDbConnectionInfo!(mixin(name)));
 		}
 	});
 	
 	mixin(q{
 		void remove() {
 			mixin(objectBuilderCreator!(mixin(name))());
-			provider(getDbType!(mixin(name))).handleQueryRemove(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, mixin(name).databaseConnection());
+			provider(getDbType!(mixin(name))).handleQueryRemove(store, getTableName!(mixin(name))(), getAllIdNames!(mixin(name))(), getAllValueNames!(mixin(name))(), &objectBuilder, getDbConnectionInfo!(mixin(name)));
 		}
 	});
 	
