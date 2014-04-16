@@ -1,5 +1,5 @@
 module dvorm.util;
-import dvorm.connection;
+import dvorm;
 import std.conv : to;
 import std.traits;
 import std.string : toUpper;
@@ -205,7 +205,18 @@ DbType getDbType(C)() {
 	foreach(c; C.databaseConnection()) {
 		return c.type;
 	}
+	foreach(c; databaseConnection()) {
+		return c.type;
+	}
 	return DbType.Memory;
+}
+
+DbConnection[] getDbConnectionInfo(C)() {
+	if (C.databaseConnection.length != 0)
+		return C.databaseConnection;
+	if (databaseConnection.length != 0)
+		return databaseConnection();
+	return [];
 }
 
 /**

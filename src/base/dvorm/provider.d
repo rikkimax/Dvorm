@@ -18,15 +18,15 @@ void registerProvider(DbType type, Provider p) {
 
 abstract class Provider {
 	C[] find(C)(string[] argNames, string[] args, ObjectBuilder builder) {
-		return dePointerArrayValues!(C)(cast(C*[])find(getTableName!C(), argNames, args, builder, C.databaseConnection()));
+		return dePointerArrayValues!(C)(cast(C*[])find(getTableName!C(), argNames, args, builder, getDbConnectionInfo!C));
 	}
 	
 	C[] findAll(C)(ObjectBuilder builder) {
-		return dePointerArrayValues!(C)(cast(C*[])findAll(getTableName!C(), builder, C.databaseConnection()));
+		return dePointerArrayValues!(C)(cast(C*[])findAll(getTableName!C(), builder, getDbConnectionInfo!C));
 	}
 	
 	C findOne(C)(string[] argNames, string[] args, ObjectBuilder builder) {
-		auto value = findOne(getTableName!C(), argNames, args, builder, C.databaseConnection());
+		auto value = findOne(getTableName!C(), argNames, args, builder, getDbConnectionInfo!C);
 		if (value is null)
 			return null;
 		else
@@ -34,15 +34,15 @@ abstract class Provider {
 	}
 	
 	void remove(C)(string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder) {
-		remove(getTableName!C(), idNames, valueNames, valueArray, builder, C.databaseConnection());
+		remove(getTableName!C(), idNames, valueNames, valueArray, builder, getDbConnectionInfo!C);
 	}
 	
 	void removeAll(C)(ObjectBuilder builder) {
-		removeAll(getTableName!C(), builder, C.databaseConnection());
+		removeAll(getTableName!C(), builder, getDbConnectionInfo!C);
 	}
 	
 	void save(C)(string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder) {
-		save(getTableName!C(), idNames, valueNames, valueArray, builder, C.databaseConnection());
+		save(getTableName!C(), idNames, valueNames, valueArray, builder, getDbConnectionInfo!C);
 	}
 	
 	void*[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection);
