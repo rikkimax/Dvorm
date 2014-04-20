@@ -23,7 +23,7 @@ string remove(C)() {
 			static if (isAnId!(C, m)) {
 				static if (isAnObjectType!(typeof(mixin("c." ~ m)))) {
 					//assert(0, "Have yet to enable saving of objects");
-					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
+					mixin("import " ~ moduleName!(typeof(mixin("c." ~ m))) ~ ";");
 					mixin(typeof(mixin("c." ~ m)).stringof ~ " d = newValueOfType!" ~ typeof(mixin("c." ~ m)).stringof ~ ";");
 					foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
 						static if (isUsable!(typeof(d), n)()) {

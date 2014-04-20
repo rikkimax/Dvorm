@@ -19,7 +19,7 @@ string findOne(C)() {
 				static if (isAnObjectType!(typeof(mixin("c." ~ m)))()) {
 					// so we are an object.
 					//assert(0, "Cannot use an object as an id");
-					mixin("import " ~ moduleName!(mixin("c." ~ m)) ~ ";");
+					mixin("import " ~ moduleName!(typeof(mixin("c." ~ m))) ~ ";");
 					mixin("auto d = newValueOfType!(" ~ typeof(mixin("c." ~ m)).stringof ~ ");");
 					foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
 						static if (isUsable!(typeof(d), n)()) {
