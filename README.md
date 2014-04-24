@@ -97,6 +97,11 @@ For e.g. MongoDb multiple DbConnection's can be used for sharding.
 
   Gets all models given the query.
   
+- N[] find_by_prop()
+
+  Foreach model found by the query, return its value (non id, the actual relationship model).<br/>
+  Like an SQL inner join
+  
 - size_t count()
 
   The amount of models that would be returned if executed.
