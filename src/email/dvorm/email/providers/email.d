@@ -190,8 +190,8 @@ class EmailProvider : Provider {
 	}
 	
 	override void*[] queryJoin(string[] store, string baseTable, string endTable, string[] baseIdNames, string[] endIdNames, Provider provider, ObjectBuilder builder, DbConnection[] baseConnection, DbConnection[] endConnection) {
-		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
-		static assert(0, baseTable ~ " does not have a relationship property for " ~ endTable);
+		assert(baseTable == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		assert(0, baseTable ~ " does not have a relationship property for " ~ endTable);
 	}
 }
 
