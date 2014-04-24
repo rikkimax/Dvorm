@@ -188,6 +188,11 @@ class EmailProvider : Provider {
 		
 		handleQueryHelper!(true)(store, builder);
 	}
+	
+	override void*[] queryJoin(string[] store, string baseTable, string endTable, string[] baseIdNames, string[] endIdNames, Provider provider, ObjectBuilder builder, DbConnection[] baseConnection, DbConnection[] endConnection) {
+		assert(table == getTableName!EmailMessage, "Email provider only uses the email data model.");
+		static assert(0, baseTable ~ " does not have a relationship property for " ~ endTable);
+	}
 }
 
 void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handler = null, bool delegate(EmailMessage message) removeHandler = null) {

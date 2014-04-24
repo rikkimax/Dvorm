@@ -49,7 +49,6 @@ Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") st
 }
 """);
 	
-	pragma(msg, handleRelationshipQueryGen!(mixin(name)));
 	mixin(handleRelationshipQueryGen!(mixin(name)));
 }
 

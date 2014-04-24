@@ -333,6 +333,86 @@ class MongoProvider : Provider {
 		
 		col.remove(Bson(query));
 	}
+	
+	override void*[] queryJoin(string[] store, string baseTable, string endTable, string[] baseIdNames, string[] endIdNames, Provider provider, ObjectBuilder builder, DbConnection[] baseConnection, DbConnection[] endConnection) {
+		checkConnection(baseTable, baseConnection);
+		MongoCollection col = cast(MongoCollection)tableCollections[baseConnection[0].database ~ "." ~ baseTable];
+		Bson[string] query;
+		
+		int num_skip = 0, num_docs_per_chunk = 0;
+		
+		// build the query
+		foreach(s; store) {
+			size_t i = s.indexOf(":");
+			if (i >= 0 && i + 1 < s.length) {
+				string op = s[0 .. i];
+				string prop = s[i + 1.. $];
+				i = prop.indexOf(":");
+				if (i >= 0 && i + 1 < prop.length) {
+					string value = prop[i + 1.. $];
+					prop = prop[0 .. i];
+					
+					switch(op) {
+						case "lt":
+						case "lte":
+						case "mt":
+						case "mte":
+							query[prop] = Bson(["$" ~ op : Bson(value)]);
+							break;
+						case "eq":
+							query[prop] = Bson(value);
+							break;
+						case "neq":
+							query[prop] = Bson(["$ne" : Bson(value)]);
+							break;
+							
+						case "startAt":
+							num_skip = to!int(value);
+							break;
+						case "maxAmount":
+							num_docs_per_chunk = to!int(value);
+							break;
+							
+						case "like":
+							query[prop] = Bson(["$regex" : Bson(".*" ~ value ~ ".*"), "$options" : Bson("i")]);
+							break;
+							
+						default:
+							break;
+					}
+				}
+			}
+		}
+		
+		Bson qBson = Bson(query);
+		
+		void*[] ret;
+		foreach(i, b; col.find(qBson, null, QueryFlags.None, num_skip, num_docs_per_chunk)) {
+			try {
+				string[string] create;
+				Bson[string] v = cast(Bson[string])b;
+				foreach(k, v2; v) {
+					try {
+						create[k] = v2.get!string();
+					} catch (Exception e) {}
+				}
+				
+				string[] args;
+				string[] idArgs;
+				
+				foreach(j, id; baseIdNames) {
+					if (id in create) {
+						idArgs ~= endIdNames[j];
+						args ~= create[id];
+					}
+				}
+						
+				ret ~= provider.find(endTable, idArgs, args, builder, endConnection);
+				
+			} catch (Exception e) {}
+		}
+		return ret;
+	}
 }
 
 private {
