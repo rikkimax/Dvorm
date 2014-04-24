@@ -153,6 +153,7 @@ pure string handleRelationshipQueryGen(C)() {
 			static if (isActualRelationship!(C, m)) {
 				mixin("import " ~ getRelationshipClassModuleName!(C, m) ~ ";");
 				ret ~= getRelationshipClassName!(C, m) ~ "[] find_by_" ~ m ~ "() {\n";
+				ret ~= "import " ~ getRelationshipClassModuleName!(C, m) ~ ";\n";
 				ret ~= objectBuilderCreator!(mixin(getRelationshipClassName!(C, m)))();
 				
 				ret ~= "	return provider(getDbType!" ~ C.stringof ~ ").queryJoin!(" ~ C.stringof ~ ", " ~ getRelationshipClassName!(C, m) ~ ")(store, getIdNamesFor!(" ~ C.stringof ~ ", \"" ~ m ~ "\"), [getNameValue!(" ~ getRelationshipClassName!(C, m) ~ ", \"" ~ getRelationshipPropertyName!(C, m) ~ "\")], provider(getDbType!" ~ getRelationshipClassName!(C, m) ~ "), &objectBuilder);\n";
