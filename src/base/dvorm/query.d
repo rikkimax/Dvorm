@@ -48,6 +48,9 @@ Query!(\"" ~ mixin("std.traits.moduleName!" ~ name) ~  "\", \"" ~ name ~ "\") st
     return this;
 }
 """);
+	
+	pragma(msg, handleRelationshipQueryGen!(mixin(name)));
+	mixin(handleRelationshipQueryGen!(mixin(name)));
 }
 
 pure string queryInterface(C)() {
@@ -140,4 +143,24 @@ pure string getValueOfHandle(C, string m, string subm)() {
 	} else {
 		return typeof(mixin("c." ~ m ~ "." ~ subm)).stringof;
 	}
+}
+
+pure string handleRelationshipQueryGen(C)() {
+	C c = newValueOfType!C;
+	string ret;
+	
+	foreach(m; __traits(allMembers, C)) {
+		static if (isUsable!(C, m) && !shouldBeIgnored!(C, m)) {
+			static if (isActualRelationship!(C, m)) {
+				mixin("import " ~ getRelationshipClassModuleName!(C, m) ~ ";");
+				ret ~= getRelationshipClassName!(C, m) ~ "[] find_by_" ~ m ~ "() {\n";
+				ret ~= objectBuilderCreator!(mixin(getRelationshipClassName!(C, m)))();
+				
+				ret ~= "	return provider(getDbType!" ~ C.stringof ~ ").queryJoin!(" ~ C.stringof ~ ", " ~ getRelationshipClassName!(C, m) ~ ")(store, getIdNamesFor!(" ~ C.stringof ~ ", \"" ~ m ~ "\"), [getNameValue!(" ~ getRelationshipClassName!(C, m) ~ ", \"" ~ getRelationshipPropertyName!(C, m) ~ "\")], provider(getDbType!" ~ getRelationshipClassName!(C, m) ~ "), &objectBuilder);\n";
+				ret ~= "}\n";
+			}
+		}
+	}
+	
+	return ret;
 }

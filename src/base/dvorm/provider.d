@@ -33,6 +33,22 @@ abstract class Provider {
 			return *cast(C*)value;
 	}
 	
+	/**
+	 * A query a little like a SQL join but limited to a set return type.
+	 * 
+	 * Params:
+	 * 		C 		= The type to go against
+	 * 		D		= The type of the end value
+	 * 		idNames	= The id values to compare against to create D (basically the property)
+	 * 		builder	= The builder that creates the return values
+	 * 
+	 * Returns:
+	 * 		An array of all type D that has a type C and set on its prop.
+	 */
+	D[] queryJoin(C, D)(string[] store, string[] baseIdNames, string[] endIdNames, Provider provider, ObjectBuilder builder) {
+		return dePointerArrayValues!(D)(cast(D*[])queryJoin(store, getTableName!C(), getTableName!D(), baseIdNames, endIdNames, provider, builder, getDbConnectionInfo!C, getDbConnectionInfo!D));
+	}
+	
 	void remove(C)(string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder) {
 		remove(getTableName!C(), idNames, valueNames, valueArray, builder, getDbConnectionInfo!C);
 	}
@@ -56,6 +72,8 @@ abstract class Provider {
 	void*[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection);
 	size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection);
 	void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection);
+	
+	void*[] queryJoin(string[] store, string baseTable, string endTable, string[] baseIdNames, string[] endIdNames, Provider provider, ObjectBuilder builder, DbConnection[] baseConnection, DbConnection[] endConnection);
 }
 
 alias void* delegate(string[string] values) ObjectBuilder;

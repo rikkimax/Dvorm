@@ -32,6 +32,7 @@
 				"dvorm:orm": "~master",
 				"dvorm:vibeproviders": "~master"
 			},
+			"sourcePaths": [],
 			"sourceFiles": ["src/main.d"],
 			"versions": ["VibeCustomMain"]
 		},

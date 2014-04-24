@@ -6,6 +6,7 @@ version(unittest) {
 	void unittest1(DbConnection[] cons...) {
 		assert(cons.length >= 1);
 		Book = cons;
+		Page = cons;
 		
 		assert(getDbType!Book() == cons[0].type);
 		
@@ -18,6 +19,11 @@ version(unittest) {
 		book2.isbn = "978-0-300-14424-7";
 		book2.edition = 15;
 		book2.save();
+		
+		Page page = newValueOfType!Page;
+		page.id = "1";
+		page.isbn = book.isbn;
+		page.save();
 		
 		assert(Book.find(book.isbn).length == 1);
 		assert(Book.find(book.isbn)[0].isbn == book.isbn);
@@ -35,8 +41,6 @@ version(unittest) {
 		}
 		assert(hasFirst && hasSecond);
 		
-		writeln(Book.query().isbn_eq(book.isbn).maxAmount(1).find());
-		
 		assert(Book.query().isbn_eq(book.isbn).maxAmount(1).find().length == 1);
 		assert(Book.query().isbn_eq(book.isbn).maxAmount(1).find()[0].isbn == book.isbn);
 		
@@ -51,6 +55,9 @@ version(unittest) {
 		assert(Book.query().edition_mt(10).find().length == 1);
 		assert(Book.query().edition_lt(10).find()[0].isbn == book.isbn);
 		assert(Book.query().edition_mt(10).find()[0].isbn == book2.isbn);
+		
+		assert(Page.query().id_eq("1").find_by_isbn().length == 1);
+		assert(Page.query().id_eq("1").find_by_isbn()[0].isbn == book.isbn);
 		
 		book.remove();
 		assert(Book.findAll().length == 1);
@@ -92,6 +99,7 @@ version(unittest) {
 		@dbName("_id")
 		string id;
 		
+		@dbId
 		@dbName("book_id")
 		@dbActualModel!(Book, "isbn")
 		string isbn;

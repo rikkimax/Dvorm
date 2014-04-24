@@ -135,6 +135,28 @@ pure string[] getAllIdNames(C, bool first = true, string prefix="")() {
 	return ret;
 }
 
+pure string[] getIdNamesFor(C, string m, bool first = true, string prefix="")() {
+	string[] ret;
+	C c = newValueOfType!C;
+	
+	static if (isUsable!(C, m)()) {
+		static if(isAnObjectType!(typeof(mixin("c." ~ m)))) {
+			static if (!first) {
+				foreach(n; __traits(allMembers, typeof(mixin("c." ~ m)))) {
+					static if (isUsable!(typeof(mixin("c." ~ m)), n)()) {
+						static if(isAnObjectType!(typeof(mixin("c." ~ m))) && isAnId!(typeof(mixin("c." ~ m)), n))
+							ret ~= getNameValue!(typeof(mixin("c." ~ m), n));
+					}
+				}
+			}
+		} else {
+			ret = [getNameValue!(C, m)];
+		}
+	}
+	
+	return ret;
+}
+
 pure string[] getAllValues(C, bool first = true, string prefix="")() {
 	string[] ret;
 	C c = newValueOfType!C;
