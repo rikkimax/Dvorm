@@ -12,6 +12,9 @@ With Vibe:
 - Mongo
 - Pop3/SMTP client with dedicated data model.
 
+With Vibe and mysql-native:
+- Mysql
+
 Usage
 --------
 Data types in terms of classes and structs should be interchable. The struct side of things has not really been tested yet however.
