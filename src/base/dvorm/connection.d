@@ -60,8 +60,8 @@ enum DbType : string {
 	Memory = "Memory",
 	Mongo = "Mongo",
 	Email = "Email",/*,
-	                 Redis = "Redis",
-	                 Mysql = "Mysql",
-	                 Postgresql = "Postgresql",
-	                 Sqlite = "Sqlite"*/
+	                 Redis = "Redis",*/
+	Mysql = "Mysql",
+	/*Postgresql = "Postgresql",
+	 Sqlite = "Sqlite"*/
 }

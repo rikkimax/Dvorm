@@ -24,7 +24,8 @@
 			"dependencies": {
 				"dvorm:orm": "~master",
 				"vibe-d": "~master"
-			}
+			},
+			"versions": ["VibeCustomMain"]
 		},
 		{
 			"name": "test",
@@ -45,12 +46,23 @@
 				"dvorm:orm": "~master",
 				"vibe-d": "~master"
 			}
+		},
+		{
+			"name": "mysql",
+			"targetType": "library",
+			"sourcePaths": ["src/mysql/dvorm"],
+			"importPaths": ["src/mysql"],
+			"dependencies": {
+				"dvorm:orm": "~master",
+				"vibe-d": "~master",
+				"mysql-native": "~master"
+			},
+			"versions": ["VibeCustomMain"]
 		}
 	],
 	"configurations": [
 		{
-			"name": "default",
-			"versions": ["VibeCustomMain"]
+			"name": "default"
 		},
 		{
 			"name": "forvibe"

@@ -6,6 +6,7 @@ import std.stdio : writeln;
 void main() {
 	version(unittest) {
 		//unittest1(DbConnection(DbType.Mongo, "192.168.100.10", ushort.init, null, null, "aa_test"));
+		//unittest1(DbConnection(DbType.Mysql, "192.168.100.13", ushort.init, "user", "password", "aa_test"));
 		unittest1(DbConnection(DbType.Memory));
 		
 		writeln(getOrmLog());

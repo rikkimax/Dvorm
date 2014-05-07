@@ -11,12 +11,12 @@ version(unittest) {
 		assert(getDbType!Book() == cons[0].type);
 		
 		Book book = newValueOfType!Book;
-		book.isbn = "978-0-300-14424-6";
+		book.isbn = "978-3-16-148410-0";
 		book.edition = 5;
 		book.save();
 		
 		Book book2 = newValueOfType!Book;
-		book2.isbn = "978-0-300-14424-7";
+		book2.isbn = "978-3-16-148410-9";
 		book2.edition = 15;
 		book2.save();
 		
@@ -63,6 +63,9 @@ version(unittest) {
 		assert(Book.findAll().length == 1);
 		book2.remove();
 		assert(Book.findAll().length == 0);
+		
+		// TODO: remove all
+		// TODO: query remove
 	}
 	
 	unittest {
