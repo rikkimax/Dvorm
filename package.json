@@ -9,6 +9,7 @@
 		"dvorm:vibeproviders": "~master",
 		"dvorm:email": "~master"
 	},
+	"sourcePaths": [],
 	"subPackages": [
 		{
 			"name": "orm",
