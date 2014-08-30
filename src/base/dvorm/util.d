@@ -315,24 +315,8 @@ pure string setterName(string m)() {
 	return "set" ~ cast(char)m[0].toUpper() ~ m [1 .. $];
 }
 
-/**
- * Creates a new instance of a type.
- * If a class it will be either no args, with params or without or .init'd
- * If a struct it will be the same.
- * If a primitive then it'll be .init
- */
 pure T newValueOfType(T)() {
-	static if (isAnObjectType!T) {
-		static if (__traits(compiles, {T value = new T();})) {
-			return new T();
-		} else static if (__traits(compiles, {T value = new T;})) {
-			return new T;
-		} else {
-			return T.init;
-		}
-	} else {
-		return T.init;
-	}
+	return T.init;
 }
 
 /**
