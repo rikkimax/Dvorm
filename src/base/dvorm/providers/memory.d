@@ -15,7 +15,7 @@ private {
 
 class MemoryProvider : Provider {
 	override void*[] find(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection) {
-		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
+        if ((cast()tableData).get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
 		
 		size_t[] value = indexsOfIds(table, argNames, args);
@@ -28,7 +28,7 @@ class MemoryProvider : Provider {
 	}
 	
 	override void*[] findAll(string table, ObjectBuilder builder, DbConnection[] connection) {
-		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
+        TableData datums = cast(TableData)(cast()tableData).get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return null;
 		} else {
@@ -41,7 +41,7 @@ class MemoryProvider : Provider {
 	}
 	
 	override void* findOne(string table, string[] argNames, string[] args, ObjectBuilder builder, DbConnection[] connection) {
-		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
+        if ((cast()tableData).get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
 		
 		size_t value = indexOfIds(table, argNames, argNames, args);
@@ -51,7 +51,7 @@ class MemoryProvider : Provider {
 	}
 	
 	override void remove(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
-		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
+        if ((cast()tableData).get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
 		
 		size_t value = indexOfIds(table, idNames, valueNames, valueArray);
@@ -68,13 +68,13 @@ class MemoryProvider : Provider {
 	}
 	
 	override void removeAll(string table, ObjectBuilder builder, DbConnection[] connection) {
-		if (tableData.get(table, TableData.init) !is cast(shared)TableData.init) {
+        if ((cast()tableData).get(table, TableData.init) !is cast(shared)TableData.init) {
 			tableData.remove(table);
 		}
 	}
 	
 	override void save(string table, string[] idNames, string[] valueNames, string[] valueArray, ObjectBuilder builder, DbConnection[] connection) {
-		if (tableData.get(table, TableData.init) is cast(shared)TableData.init)
+        if ((cast()tableData).get(table, TableData.init) is cast(shared)TableData.init)
 			tableData[table] = TableData.init;
 		size_t value = indexOfIds(table, idNames, valueNames, valueArray);
 		
@@ -95,7 +95,7 @@ class MemoryProvider : Provider {
 	}
 	
 	override void*[] handleQuery(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
-		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
+        TableData datums = cast(TableData)(cast()tableData).get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return null;
 		} else {
@@ -221,7 +221,7 @@ class MemoryProvider : Provider {
 	}
 	
 	override size_t handleQueryCount(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
-		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
+        TableData datums = cast(TableData)(cast()tableData).get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return 0;
 		} else {
@@ -345,7 +345,7 @@ class MemoryProvider : Provider {
 	}
 	
 	override void handleQueryRemove(string[] store, string table, string[] idNames, string[] valueNames, ObjectBuilder builder, DbConnection[] connection) {
-		TableData datums = cast(TableData)tableData.get(table, cast(shared)TableData.init);
+        TableData datums = cast(TableData)(cast()tableData).get(table, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return;
 		} else {
@@ -448,7 +448,7 @@ class MemoryProvider : Provider {
 	}
 	
 	override void*[] queryJoin(string[] store, string baseTable, string endTable, string[] baseIdNames, string[] endIdNames, Provider provider, ObjectBuilder builder, DbConnection[] baseConnection, DbConnection[] endConnection) {
-		TableData datums = cast(TableData)tableData.get(baseTable, cast(shared)TableData.init);
+        TableData datums = cast(TableData)(cast()tableData).get(baseTable, cast(shared)TableData.init);
 		if (datums.value == null) {
 			return null;
 		} else {
@@ -587,7 +587,7 @@ class MemoryProvider : Provider {
 
 private {
 	size_t indexOfIds(string table, string[] ids, string[] valueNames, string[] valueArray) {
-		TableData td = cast(TableData)tableData.get(table, cast(shared)TableData.init);
+        TableData td = cast(TableData)(cast()tableData).get(table, cast(shared)TableData.init);
 		foreach(i, tda; td.value) {
 			bool matches = true;
 			foreach(j, v; valueNames) {
@@ -606,11 +606,11 @@ private {
 				return i;
 			}
 		}
-		return tableData.get(table, TableData.init).value.length;
+        return (cast()tableData).get(table, TableData.init).value.length;
 	}
 	
 	size_t[] indexsOfIds(string table, string[] ids, string[] valueArray) {
-		TableData td = cast(TableData)tableData.get(table, cast(shared)TableData.init);
+        TableData td = cast(TableData)(cast()tableData).get(table, cast(shared)TableData.init);
 		size_t[] ret;
 	F1: foreach(i, tda; td.value) {
 			foreach(j, id; ids) {
