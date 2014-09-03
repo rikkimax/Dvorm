@@ -1,4 +1,4 @@
-﻿module dvorm.email.providers.email;
+module dvorm.email.providers.email;
 import dvorm.email.message;
 import dvorm.email.config;
 import dvorm;
@@ -211,8 +211,8 @@ void*[] getData(ObjectBuilder builder, bool delegate(EmailMessage message) handl
 			
 			if ((receiveConfig.security & ClientSecurity.StartTLS) == ClientSecurity.StartTLS ||
 			    (receiveConfig.security & ClientSecurity.SSL) == ClientSecurity.SSL) {
-				auto ctx = new SSLContext(SSLContextKind.client);
-				conn = new SSLStream(raw_conn, ctx, SSLStreamState.connecting);
+                auto ctx = createSSLContext(SSLContextKind.client);
+                conn = createSSLStream(raw_conn, ctx, SSLStreamState.connecting);
 				
 				got = cast(string)conn.readLine();
 			}
