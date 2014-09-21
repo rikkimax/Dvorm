@@ -319,7 +319,7 @@ pure T newValueOfType(T)() {
     static if (__traits(compiles, {T t = new T;}))
         return new T;
     else
-	    return T.init;
+	return T.init;
 }
 
 /**
