@@ -316,7 +316,10 @@ pure string setterName(string m)() {
 }
 
 pure T newValueOfType(T)() {
-	return T.init;
+    static if (__traits(compiles, {T t = new T;}))
+        return new T;
+    else
+	    return T.init;
 }
 
 /**
