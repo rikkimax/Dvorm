@@ -111,12 +111,14 @@ pure bool hasType(C, string name, string type)() {
 	return false;
 }
 
-pure string queryIGen(C, string m, string op, string subm="",
-                      C c = newValueOfType!C,
-                      string nameOfFunc = m ~ (subm == "" ? "" : "_" ~ subm) ~ "_" ~ op,
-                      string handleName = getNameOfHandle!(C, m, subm)(),
-                      string typeValue = typeof(mixin("c." ~ m)).stringof == "string" ? "value" : "to!string(value)",
-                      string valueType = getValueOfHandle!(C, m, subm)())() {
+pure string queryIGen(C, string m, string op, string subm="")() {
+
+    C c = newValueOfType!C;
+    string nameOfFunc = m ~ (subm == "" ? "" : "_" ~ subm) ~ "_" ~ op;
+    string typeValue = typeof(mixin("c." ~ m)).stringof == "string" ? "value" : "to!string(value)";
+    string handleName = getNameOfHandle!(C, m, subm)();
+    string valueType = getValueOfHandle!(C, m, subm)();
+
 	return 
 		"""
 Query!(\"" ~ moduleName!C ~ "\", \"" ~ C.stringof ~ "\") " ~ nameOfFunc ~ "(" ~ valueType ~ " value) {
