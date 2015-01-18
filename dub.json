@@ -5,9 +5,9 @@
 	"authors": ["Richard Andrew Cattermole"],
 	"license" : "MIT",
 	"dependencies": {
-		"dvorm:orm": "~master",
-		"dvorm:vibeproviders": "~master",
-		"dvorm:email": "~master"
+		"dvorm:orm": "*",
+		"dvorm:vibeproviders": "*",
+		"dvorm:email": "*"
 	},
 	"sourcePaths": [],
 	"subPackages": [
