@@ -23,16 +23,16 @@
 			"sourcePaths": ["src/vibeproviders/dvorm"],
 			"importPaths": ["src/vibeproviders"],
 			"dependencies": {
-				"dvorm:orm": "~master",
-				"vibe-d": "~master"
+				"dvorm:orm": "*",
+				"vibe-d": ">=0.7.22"
 			},
 			"versions": ["VibeCustomMain"]
 		},
 		{
 			"name": "test",
 			"dependencies": {
-				"dvorm:orm": "~master",
-				"dvorm:vibeproviders": "~master"
+				"dvorm:orm": "*",
+				"dvorm:vibeproviders": "*"
 			},
 			"sourcePaths": [],
 			"sourceFiles": ["src/main.d"],
@@ -44,8 +44,8 @@
 			"sourcePaths": ["src/email/dvorm"],
 			"importPaths": ["src/email"],
 			"dependencies": {
-				"dvorm:orm": "~master",
-				"vibe-d": "~master"
+				"dvorm:orm": "*",
+				"vibe-d": ">=0.7.22"
 			}
 		},
 		{
@@ -54,9 +54,9 @@
 			"sourcePaths": ["src/mysql/dvorm"],
 			"importPaths": ["src/mysql"],
 			"dependencies": {
-				"dvorm:orm": "~master",
-				"vibe-d": "~master",
-				"mysql-native": "~master"
+				"dvorm:orm": "*",
+				"vibe-d": ">=0.7.22",
+				"mysql-native": ">=0.0.16"
 			},
 			"versions": ["VibeCustomMain"]
 		}
