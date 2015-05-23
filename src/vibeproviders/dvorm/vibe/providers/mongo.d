@@ -438,6 +438,11 @@ private {
 						conStr = conStr[0 .. $-1];
 				}
 				
+				if(con.database != "")
+				{
+					conStr ~= "/" ~ con.database;
+				}
+				
 				MongoClient client = connectMongoDB(conStr);
 				tableCollections[con.database ~ "." ~ table] = cast(shared)client.getCollection(con.database ~ "." ~ table);
 			} else {
