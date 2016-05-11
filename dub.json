@@ -7,9 +7,10 @@
 	"dependencies": {
 		"dvorm:orm": "*",
 		"dvorm:vibeproviders": "*",
-		"dvorm:email": "*"
+		"dvorm:email": "*",
+		"dvorm:mysql": "*"
 	},
-	"sourcePaths": [],
+	"sourcePaths": ["src/"],
 	"subPackages": [
 		{
 			"name": "orm",
@@ -24,7 +25,7 @@
 			"importPaths": ["src/vibeproviders"],
 			"dependencies": {
 				"dvorm:orm": "*",
-				"vibe-d": ">=0.7.22"
+				"vibe-d": "~>0.7.22"
 			}
 		},
 		{
@@ -44,7 +45,7 @@
 			"importPaths": ["src/email"],
 			"dependencies": {
 				"dvorm:orm": "*",
-				"vibe-d": ">=0.7.22"
+				"vibe-d": "~>0.7.22"
 			}
 		},
 		{
@@ -54,8 +55,8 @@
 			"importPaths": ["src/mysql"],
 			"dependencies": {
 				"dvorm:orm": "*",
-				"vibe-d": ">=0.7.22",
-				"mysql-native": ">=0.0.16"
+				"vibe-d": "~>0.7.22",
+				"mysql-native": "~>0.0.16"
 			}
 		}
 	],
