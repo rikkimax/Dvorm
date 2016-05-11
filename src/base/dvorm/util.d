@@ -61,7 +61,7 @@ pure string getNameValue(C, string m)() {
 			ret = UDA.value;
 		}
 	}
-	return m;
+	return ret;
 }
 
 pure string getTableName(C)() {
