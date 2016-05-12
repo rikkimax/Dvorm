@@ -30,57 +30,63 @@ struct dbActualModel(T, string prop) {
 
 pure string getDefaultValue(C, string m)() {
 	C c = newValueOfType!C;
+	string ret = "";
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (__traits(compiles, {dbDefaultValue v = UDA;})) {
-			return UDA.value;
+			ret = UDA.value;
 		}
 	}
-	return "";
+	return ret;
 }
 
 pure bool hasDefaultValue(C, string m)() {
 	C c = newValueOfType!C;
+	bool ret = false;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (__traits(compiles, {dbDefaultValue v = UDA;})) {
-			return true;
+			ret = true;
 		}
 	}
-	return false;
+	return ret;
 }
 
 pure string getNameValue(C, string m)() {
 	C c = newValueOfType!C;
+	string ret = m;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (__traits(compiles, {dbName v = UDA;})) {
-			return UDA.value;
+			ret = UDA.value;
 		}
 	}
-	return m;
+	return ret;
 }
 
 pure string getTableName(C)() {
+	string ret = C.stringof;
+
 	foreach(UDA; __traits(getAttributes, C)) {
 		static if (__traits(compiles, {dbName v = UDA;})) {
-			return UDA.value;
+			ret = UDA.value;
 		}
 	}
-	return C.stringof;
+	return ret;
 }
 
 pure bool shouldBeIgnored(C, string m)() {
 	C c = newValueOfType!C;
+	bool ret = false;
 	
 	static if (__traits(compiles, __traits(getProtection, mixin("c." ~ m))) &&
 	           __traits(getProtection, mixin("c." ~ m)) == "public") {
 		foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 			static if (is(UDA : dbIgnore)) {
-				return true;
+				ret = true;
 			}
 		}
-		return false;
+		return ret;
 	} else {
 		return true;
 	}
@@ -88,13 +94,14 @@ pure bool shouldBeIgnored(C, string m)() {
 
 pure bool isAnId(C, string m)() {
 	C c = newValueOfType!C;
+	bool ret = false;
 	
 	foreach(UDA; __traits(getAttributes, mixin("c." ~ m))) {
 		static if (is(UDA : dbId)) {
-			return true;
+			ret = true;
 		}
 	}
-	return false;
+	return ret;
 }
 
 pure string[] getAllIds(C, bool first = true, string prefix="")() {
@@ -247,15 +254,17 @@ DbConnection[] getDbConnectionInfo(C)() {
 
 pure bool isActualRelationship(T, string f)() {
 	T t = newValueOfType!T;
+	bool ret = false;
+
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA)) {
 			static if (UDA2 == "dbIsModel") {
-				return true;	
+				ret = true;
 			}
 		}
 	}
 	
-	return false;
+	return ret;
 }
 
 /**
@@ -264,24 +273,28 @@ pure bool isActualRelationship(T, string f)() {
 
 pure string getRelationshipClassName(T, string f)() {
 	T t = newValueOfType!T;
+	string ret = null;
+
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA))
 			static if (UDA2 == "dbIsModel")
-				return typeof(UDA.type).stringof;
+				ret = typeof(UDA.type).stringof;
 	}
 	
-	return null;
+	return ret;
 }
 
 pure string getRelationshipClassModuleName(T, string f)() {
 	T t = newValueOfType!T;
+	string ret = null;
+
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA))
 			static if (UDA2 == "dbIsModel")
-				return moduleName!(typeof(UDA.type));
+				ret = moduleName!(typeof(UDA.type));
 	}
 	
-	return null;
+	return ret;
 }
 
 /**
@@ -290,15 +303,17 @@ pure string getRelationshipClassModuleName(T, string f)() {
 
 string getRelationshipPropertyName(T, string f)() {
 	T t = newValueOfType!T;
+	string ret = null;
+
 	foreach(UDA; __traits(getAttributes, mixin("t." ~ f))) {
 		foreach(UDA2; __traits(getAttributes, UDA)) {
 			static if (UDA2 == "dbIsModel") {
-				return (UDA.init).name;
+				ret = (UDA.init).name;
 			}
 		}
 	}
 	
-	return null;
+	return ret;
 }
 
 /**
